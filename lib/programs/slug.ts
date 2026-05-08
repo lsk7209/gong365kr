@@ -34,8 +34,9 @@ export function createProgramSlug(input: {
   const titleSlug = createTitleSlug(input.title);
   const fallbackId = input.pblancId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const stableTitle = titleSlug || fallbackId || "notice";
+  const stableId = fallbackId || "notice";
 
-  return `${category}-${stableTitle}-${input.year}`;
+  return `${category}-${stableTitle}-${input.year}-${stableId}`;
 }
 
 function createTitleSlug(title: string) {

@@ -36,7 +36,7 @@ describe("Bizinfo parser", () => {
     assert.equal(program.status, "active");
     assert.equal(program.agency, "중소벤처기업부");
     assert.equal(program.summaryShort, "예비창업자 사업화 지원");
-    assert.match(program.slug, /^changup-yebi-changup-changup-package-support-program-2026$/);
+    assert.match(program.slug, /^changup-yebi-changup-changup-package-support-program-2026-pbln-0001$/);
   });
 
   it("parses application period and status", () => {
