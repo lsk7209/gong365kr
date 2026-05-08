@@ -1,0 +1,43 @@
+name: StartupMoneyMap cron
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Cron task to run"
+        required: true
+        default: "sync"
+        type: choice
+        options:
+          - sync
+          - refresh-status
+
+concurrency:
+  group: startupmoneymap-cron-${{ github.event.schedule || github.event.inputs.task || 'manual' }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'sync' || github.event.schedule == '*/30 * * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call Bizinfo sync endpoint
+        run: |
+          curl --fail-with-body --show-error --silent \
+            "${{ secrets.VERCEL_BASE }}/api/cron/sync" \
+            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+  refresh-status:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'refresh-status' || github.event.schedule == '0 21 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call status refresh endpoint
+        run: |
+          curl --fail-with-body --show-error --silent \
+            "${{ secrets.VERCEL_BASE }}/api/cron/refresh-status" \
+            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

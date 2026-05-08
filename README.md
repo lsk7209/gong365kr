@@ -14,9 +14,22 @@ pnpm dev
 ```bash
 pnpm lint
 pnpm type-check
+pnpm test
 pnpm build
 ```
 
 ## 주요 환경변수
 
 필요한 값은 `.env.example`을 기준으로 `.env.local`에 설정합니다. 현재 Sprint 1 범위에서는 외부 API 실호출과 DB push를 실행하지 않습니다.
+
+## 운영 Cron
+
+Vercel Cron 대신 GitHub Actions가 배포된 API 라우트를 호출합니다.
+
+- 30분마다: `/api/cron/sync`
+- 매일 06:00 KST: `/api/cron/refresh-status`
+
+GitHub Secrets:
+
+- `VERCEL_BASE`: 배포된 사이트 origin, 예: `https://gong365kr.vercel.app`
+- `CRON_SECRET`: API 라우트의 Bearer 인증 토큰
