@@ -1,4 +1,4 @@
-import { BIZINFO_ENDPOINT, DEFAULT_BIZINFO_PAGE_UNIT } from "./constants";
+import { BIZINFO_ENDPOINT, BIZINFO_REQUEST_HEADERS, DEFAULT_BIZINFO_PAGE_UNIT } from "./constants";
 import type { BizinfoFetchResult, BizinfoRawItem } from "./types";
 import { retryFetch } from "@/lib/http/retry-fetch";
 
@@ -22,6 +22,7 @@ export async function fetchBizinfoPrograms(input: FetchBizinfoProgramsInput): Pr
 
   const response = await retryFetch(url, {
     headers: {
+      ...BIZINFO_REQUEST_HEADERS,
       accept: "application/json"
     },
     next: {

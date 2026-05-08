@@ -1,3 +1,4 @@
+import { BIZINFO_REQUEST_HEADERS } from "./constants";
 import { retryFetch } from "@/lib/http/retry-fetch";
 
 const PDF_LINK_PATTERN = /href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi;
@@ -5,6 +6,7 @@ const PDF_LINK_PATTERN = /href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi;
 export async function fetchBizinfoDetailHtml(url: string) {
   const response = await retryFetch(url, {
     headers: {
+      ...BIZINFO_REQUEST_HEADERS,
       accept: "text/html"
     },
     next: {
@@ -38,6 +40,7 @@ export function extractPdfLinks(html: string, baseUrl: string) {
 export async function fetchPdfBuffer(url: string) {
   const response = await retryFetch(url, {
     headers: {
+      ...BIZINFO_REQUEST_HEADERS,
       accept: "application/pdf"
     },
     next: {

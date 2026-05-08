@@ -2,11 +2,11 @@
 ## 현재 작업
 generate-meta, AdSense, 기업마당 sync 안정화 배포 검증 중.
 ## 최근 변경 (최근 5개만)
+- 05-09: Vercel→기업마당 ECONNRESET 대응을 위해 명시적 User-Agent/Accept-Language 추가
 - 05-09: Vercel→기업마당 ECONNRESET 완화를 위해 sync 기본 배치와 workflow 호출을 10건으로 제한
 - 05-09: Bizinfo slug 충돌 방지를 위해 공고 ID를 slug 끝에 포함
 - 05-09: 기업마당 API·상세·PDF fetch에 5xx/일시적 실패 3회 재시도 적용
 - 05-08: AdSense publisher 기본값 적용 및 `public/ads.txt` 추가
-- 05-08: Turso 원격 schema push, Bizinfo sync 1건 실호출, Vercel env 등록
 ## TODO
 - [ ] `CRON_ENABLED=true` 전환 전 GitHub Actions sync 재검증
 - [ ] Gemini 구조화/임베딩 단계 구현
@@ -20,6 +20,7 @@ generate-meta, AdSense, 기업마당 sync 안정화 배포 검증 중.
 - 외부 호출: fetch 실패·5xx만 3회 재시도, 4xx는 즉시 반환
 - Slug: 제목 기반 slug 충돌 방지를 위해 `pblancId`를 suffix로 포함
 - Sync batch: 기업마당 API 안정성을 위해 기본 `pageUnit=10`
+- Bizinfo headers: Vercel 서버리스 호출 차단 완화를 위해 User-Agent/Accept-Language 명시
 - 배포: 수시 배포하지 않고 큰 작업 단위가 끝날 때만 진행
 ## 주의
 - 행사정보 API 키는 받았지만 현재 코드에 대응 env/기능이 없어 미적용
