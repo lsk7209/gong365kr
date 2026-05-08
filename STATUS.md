@@ -1,28 +1,24 @@
-# Status | 마지막: 2026-05-08
+# Status | 마지막: 2026-05-09
 ## 현재 작업
-PDF 파싱 기반 구현 완료, 다음은 generate-meta 또는 실제 키 기반 sync 검증
+generate-meta, AdSense, 기업마당 재시도 로직 로컬 구현 완료. 배포는 큰 작업 단위 후 진행.
 ## 최근 변경 (최근 5개만)
-- 05-08: 기업마당 상세 HTML PDF 링크 추출 및 PDF 텍스트 추출 유틸 추가
-- 05-08: GitHub/Vercel secrets 설정, Vercel production 배포, www.gong365.kr 200 확인
-- 05-08: GitHub Actions cron workflow 추가
-- 05-08: `/api/cron/refresh-status` 추가, 공고 상태 자동 갱신 로직 구현
-- 05-08: 상태 계산·refresh route 테스트 추가
+- 05-09: 기업마당 API·상세·PDF fetch에 5xx/일시적 실패 3회 재시도 적용
+- 05-08: AdSense publisher 기본값 적용 및 `public/ads.txt` 추가
+- 05-08: Turso 원격 schema push, Bizinfo sync 1건 실호출, Vercel env 등록
+- 05-08: Vercel PDF 런타임 500 방지를 위해 pdf-parse 지연 로딩 및 canvas 고정
+- 05-08: generate-meta 파이프라인·GitHub Actions job 추가
 ## TODO
-- [x] Next.js 15 기반 골격 검증
-- [ ] Turso/공공데이터/Gemini 키 확보 후 실호출 검증
-- [x] Bizinfo sync 기능 구현
-- [x] refresh-status 기능 구현
-- [x] GitHub Actions cron 검증
-- [ ] Vercel TURSO/BIZINFO env 설정 후 CRON_ENABLED=true 전환
-- [x] PDF 파싱 기반 유틸 구현
+- [ ] `CRON_ENABLED=true` 전환 전 GitHub Actions sync 재검증
+- [ ] Gemini 구조화/임베딩 단계 구현
+- [ ] 행사정보 API 대응 기능 설계
 ## 결정사항
-- 첫 범위: Sprint 1 기반 구축부터 진행
-- 키 처리: 키 없이 골격과 검증 스크립트 우선
 - Bizinfo sync: 키 누락 시 외부 호출 전 503 반환
 - refresh-status: 외부 API 없이 DB 날짜 기준으로 status 갱신
-- 운영 cron: GitHub Actions에서 Vercel API 라우트 호출
-- DB/API 키 준비 전 예약 cron은 `CRON_ENABLED=false`로 비활성화
-- Vercel 프로젝트 framework는 `nextjs`로 고정
-- PDF 파싱: `pdf-parse` v2 `PDFParse` named export 사용
+- generate-meta: PDF 텍스트 추출 성공 시 `program_meta.updatedAt` 기록
+- PDF 후보: HWPX 등 비PDF를 건너뛰고 성공한 PDF만 저장
+- Vercel 서버리스: `pdf-parse`는 인증 후 동적 import, canvas는 직접 의존성 고정
+- 외부 호출: fetch 실패·5xx만 3회 재시도, 4xx는 즉시 반환
+- 배포: 수시 배포하지 않고 큰 작업 단위가 끝날 때만 진행
 ## 주의
-- 자동 본문 생성·실 API 호출·DB push는 Sprint 1 범위에서 제외됨
+- 행사정보 API 키는 받았지만 현재 코드에 대응 env/기능이 없어 미적용
+- GitHub Actions sync 실패 원인은 기업마당 API `ECONNRESET`이었고 재시도 로직으로 보강됨

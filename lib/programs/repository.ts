@@ -1,10 +1,24 @@
-import { sql } from "drizzle-orm";
-import { programs } from "@/db/schema";
+import { eq, isNull, sql } from "drizzle-orm";
+import { programMeta, programs } from "@/db/schema";
 import type { getDb } from "@/db";
 import { toUnixSeconds } from "./status";
 import type { ProgramUpsertInput } from "./types";
 
 type DbClient = ReturnType<typeof getDb>;
+
+export type PendingMetaProgram = {
+  id: number;
+  title: string;
+  summaryShort: string | null;
+  rawUrl: string;
+  detailPdfUrl: string | null;
+};
+
+export type ProgramMetaExtractionInput = {
+  programId: number;
+  detailPdfUrl: string;
+  updatedAt: Date;
+};
 
 export async function upsertPrograms(db: DbClient, inputs: ProgramUpsertInput[]) {
   if (inputs.length === 0) {
@@ -72,4 +86,42 @@ export async function refreshProgramStatuses(db: DbClient, now = new Date()) {
     upcoming: Number(upcoming.rowsAffected),
     active: Number(active.rowsAffected)
   };
+}
+
+export async function listProgramsPendingMeta(db: DbClient, limit: number): Promise<PendingMetaProgram[]> {
+  return db
+    .select({
+      id: programs.id,
+      title: programs.title,
+      summaryShort: programs.summaryShort,
+      rawUrl: programs.rawUrl,
+      detailPdfUrl: programs.detailPdfUrl
+    })
+    .from(programs)
+    .leftJoin(programMeta, eq(programMeta.programId, programs.id))
+    .where(isNull(programMeta.programId))
+    .limit(limit);
+}
+
+export async function saveProgramMetaExtraction(db: DbClient, input: ProgramMetaExtractionInput) {
+  await db
+    .update(programs)
+    .set({
+      detailPdfUrl: input.detailPdfUrl,
+      lastSyncedAt: input.updatedAt
+    })
+    .where(eq(programs.id, input.programId));
+
+  await db
+    .insert(programMeta)
+    .values({
+      programId: input.programId,
+      updatedAt: input.updatedAt
+    })
+    .onConflictDoUpdate({
+      target: programMeta.programId,
+      set: {
+        updatedAt: sql.raw("excluded.updated_at")
+      }
+    });
 }

@@ -1,7 +1,9 @@
+import { retryFetch } from "@/lib/http/retry-fetch";
+
 const PDF_LINK_PATTERN = /href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi;
 
 export async function fetchBizinfoDetailHtml(url: string) {
-  const response = await fetch(url, {
+  const response = await retryFetch(url, {
     headers: {
       accept: "text/html"
     },
@@ -34,7 +36,7 @@ export function extractPdfLinks(html: string, baseUrl: string) {
 }
 
 export async function fetchPdfBuffer(url: string) {
-  const response = await fetch(url, {
+  const response = await retryFetch(url, {
     headers: {
       accept: "application/pdf"
     },

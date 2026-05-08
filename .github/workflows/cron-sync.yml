@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "*/30 * * * *"
     - cron: "0 21 * * *"
+    - cron: "0 22 * * *"
   workflow_dispatch:
     inputs:
       task:
@@ -14,6 +15,7 @@ on:
         options:
           - sync
           - refresh-status
+          - generate-meta
 
 concurrency:
   group: startupmoneymap-cron-${{ github.event.schedule || github.event.inputs.task || 'manual' }}
@@ -41,5 +43,17 @@ jobs:
         run: |
           curl --fail-with-body --show-error --silent \
             "${{ secrets.VERCEL_BASE }}/api/cron/refresh-status" \
+            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
+
+  generate-meta:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'generate-meta') || (github.event.schedule == '0 22 * * *' && vars.CRON_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call meta generation endpoint
+        run: |
+          curl --fail-with-body --show-error --silent \
+            "${{ secrets.VERCEL_BASE }}/api/cron/generate-meta" \
             --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"

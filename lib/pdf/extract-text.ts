@@ -1,5 +1,3 @@
-import { PDFParse } from "pdf-parse";
-
 export type PdfTextResult = {
   text: string;
   pages: number;
@@ -7,6 +5,7 @@ export type PdfTextResult = {
 };
 
 export async function extractPdfText(buffer: Buffer): Promise<PdfTextResult> {
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
 
   try {

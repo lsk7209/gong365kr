@@ -1,5 +1,6 @@
 import { BIZINFO_ENDPOINT, DEFAULT_BIZINFO_PAGE_UNIT } from "./constants";
 import type { BizinfoFetchResult, BizinfoRawItem } from "./types";
+import { retryFetch } from "@/lib/http/retry-fetch";
 
 type FetchBizinfoProgramsInput = {
   apiKey: string;
@@ -19,7 +20,7 @@ export async function fetchBizinfoPrograms(input: FetchBizinfoProgramsInput): Pr
     url.searchParams.set("hashtags", input.hashtags);
   }
 
-  const response = await fetch(url, {
+  const response = await retryFetch(url, {
     headers: {
       accept: "application/json"
     },
