@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   sync:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'sync' || github.event.schedule == '*/30 * * * *'
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'sync') || (github.event.schedule == '*/30 * * * *' && vars.CRON_ENABLED == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -29,10 +29,11 @@ jobs:
         run: |
           curl --fail-with-body --show-error --silent \
             "${{ secrets.VERCEL_BASE }}/api/cron/sync" \
-            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
 
   refresh-status:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'refresh-status' || github.event.schedule == '0 21 * * *'
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'refresh-status') || (github.event.schedule == '0 21 * * *' && vars.CRON_ENABLED == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -40,4 +41,5 @@ jobs:
         run: |
           curl --fail-with-body --show-error --silent \
             "${{ secrets.VERCEL_BASE }}/api/cron/refresh-status" \
-            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"

@@ -31,5 +31,10 @@ Vercel Cron 대신 GitHub Actions가 배포된 API 라우트를 호출합니다.
 
 GitHub Secrets:
 
-- `VERCEL_BASE`: 배포된 사이트 origin, 예: `https://gong365kr.vercel.app`
+- `VERCEL_BASE`: 배포된 사이트 origin, 예: `https://www.gong365.kr`
 - `CRON_SECRET`: API 라우트의 Bearer 인증 토큰
+- `VERCEL_AUTOMATION_BYPASS_SECRET`: Vercel Deployment Protection 우회 토큰
+
+GitHub Variables:
+
+- `CRON_ENABLED`: `true`일 때 예약 cron 실행. DB/API 키 준비 전에는 `false` 유지
