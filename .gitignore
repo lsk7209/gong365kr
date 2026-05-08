@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+
+# next
+.next
+out
+
+# production
+dist
+build
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local tooling state
+.omx
+tsconfig.tsbuildinfo
+
+# system
+.DS_Store
+Thumbs.db
