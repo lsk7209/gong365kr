@@ -1,7 +1,8 @@
 import { BIZINFO_DETAIL_URL } from "./constants";
 import type { BizinfoRawItem } from "./types";
 import { createProgramSlug } from "@/lib/programs/slug";
-import type { ProgramStatus, ProgramUpsertInput } from "@/lib/programs/types";
+import { calculateProgramStatus } from "@/lib/programs/status";
+import type { ProgramUpsertInput } from "@/lib/programs/types";
 
 const FIELD_CANDIDATES = {
   pblancId: ["pblancId", "seq"],
@@ -40,7 +41,11 @@ export function normalizeBizinfoItem(item: BizinfoRawItem, now = new Date()): Pr
     categoryCode,
     applicationStart: period.start,
     applicationEnd: period.end,
-    status: getProgramStatus(period.start, period.end, now),
+    status: calculateProgramStatus({
+      applicationStart: period.start,
+      applicationEnd: period.end,
+      now
+    }),
     rawUrl,
     detailPdfUrl: null,
     rawJson: JSON.stringify(item),
@@ -60,18 +65,6 @@ export function parseApplicationPeriod(value: string | null) {
     start: parseDate(dateValues[0] ?? null),
     end: parseDate(dateValues[1] ?? null)
   };
-}
-
-export function getProgramStatus(start: Date | null, end: Date | null, now: Date): ProgramStatus {
-  if (start && start.getTime() > now.getTime()) {
-    return "upcoming";
-  }
-
-  if (end && endOfDay(end).getTime() < now.getTime()) {
-    return "closed";
-  }
-
-  return "active";
 }
 
 function readString(item: BizinfoRawItem, keys: readonly string[]) {
@@ -107,10 +100,6 @@ function parseDate(value: string | null) {
 
   const [year, month, day] = normalized.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day));
-}
-
-function endOfDay(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }
 
 function createDetailUrl(pblancId: string) {

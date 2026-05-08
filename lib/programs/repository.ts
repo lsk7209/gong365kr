@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { programs } from "@/db/schema";
 import type { getDb } from "@/db";
+import { toUnixSeconds } from "./status";
 import type { ProgramUpsertInput } from "./types";
 
 type DbClient = ReturnType<typeof getDb>;
@@ -34,4 +35,41 @@ export async function upsertPrograms(db: DbClient, inputs: ProgramUpsertInput[])
     });
 
   return { insertedOrUpdated: inputs.length };
+}
+
+export async function refreshProgramStatuses(db: DbClient, now = new Date()) {
+  const nowSeconds = toUnixSeconds(now);
+
+  const closed = await db
+    .update(programs)
+    .set({
+      status: "closed",
+      lastSyncedAt: now
+    })
+    .where(sql`${programs.applicationEnd} is not null and ${programs.applicationEnd} < ${nowSeconds}`);
+
+  const upcoming = await db
+    .update(programs)
+    .set({
+      status: "upcoming",
+      lastSyncedAt: now
+    })
+    .where(sql`${programs.applicationStart} is not null and ${programs.applicationStart} > ${nowSeconds}`);
+
+  const active = await db
+    .update(programs)
+    .set({
+      status: "active",
+      lastSyncedAt: now
+    })
+    .where(
+      sql`(${programs.applicationStart} is null or ${programs.applicationStart} <= ${nowSeconds})
+        and (${programs.applicationEnd} is null or ${programs.applicationEnd} >= ${nowSeconds})`
+    );
+
+  return {
+    closed: Number(closed.rowsAffected),
+    upcoming: Number(upcoming.rowsAffected),
+    active: Number(active.rowsAffected)
+  };
 }

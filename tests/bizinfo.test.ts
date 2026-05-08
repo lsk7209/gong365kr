@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { extractBizinfoItems } from "@/lib/bizinfo/client";
-import { getProgramStatus, normalizeBizinfoItem, parseApplicationPeriod } from "@/lib/bizinfo/normalize";
+import { normalizeBizinfoItem, parseApplicationPeriod } from "@/lib/bizinfo/normalize";
+import { calculateProgramStatus } from "@/lib/programs/status";
 
 describe("Bizinfo parser", () => {
   it("extracts jsonArray.item payloads", () => {
@@ -44,6 +45,13 @@ describe("Bizinfo parser", () => {
 
     assert.equal(period.start?.toISOString(), "2026-04-28T00:00:00.000Z");
     assert.equal(period.end?.toISOString(), "2026-05-22T00:00:00.000Z");
-    assert.equal(getProgramStatus(period.start, period.end, now), "closed");
+    assert.equal(
+      calculateProgramStatus({
+        applicationStart: period.start,
+        applicationEnd: period.end,
+        now
+      }),
+      "closed"
+    );
   });
 });
