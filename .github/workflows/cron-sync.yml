@@ -30,7 +30,7 @@ jobs:
       - name: Call Bizinfo sync endpoint
         run: |
           curl --fail-with-body --show-error --silent \
-            "${{ secrets.VERCEL_BASE }}/api/cron/sync" \
+            "${{ secrets.VERCEL_BASE }}/api/cron/sync?pageUnit=10" \
             --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
 
