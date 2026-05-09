@@ -1,6 +1,6 @@
 # Status | 마지막: 2026-05-09
 ## 현재 작업
-GitHub Actions runner 직접 Bizinfo sync 전환 및 cron 활성화 완료.
+실데이터 sync/cron 완료. 다음 작업은 프론트 실제 DB 데이터 연결.
 ## 최근 변경 (최근 5개만)
 - 05-09: GitHub Actions variable `CRON_ENABLED=true` 전환
 - 05-09: Vercel 경유 sync 실패 회피를 위해 GitHub Actions runner 직접 Turso upsert 스크립트 추가
@@ -10,6 +10,7 @@ GitHub Actions runner 직접 Bizinfo sync 전환 및 cron 활성화 완료.
 ## TODO
 - [x] `CRON_ENABLED=true` 전환 전 GitHub Actions sync 재검증
 - [x] `CRON_ENABLED=true` 전환
+- [ ] 홈/마감/지역 페이지를 Turso 실제 `programs` 데이터로 연결
 - [ ] Gemini 구조화/임베딩 단계 구현
 - [ ] 행사정보 API 대응 기능 설계
 ## 결정사항
