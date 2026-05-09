@@ -1,5 +1,7 @@
 import { getDb } from "@/db";
 import { hasRequiredEnv } from "@/lib/env";
+import { getEventSummary, type EventListItem } from "@/lib/events/display";
+import { listRecentEvents } from "@/lib/events/query-repository";
 import { getProgramSummary, type ProgramListItem } from "@/lib/programs/display";
 import { listRecentProgramsForFeed } from "@/lib/programs/query-repository";
 import { getSiteName, getSiteUrl } from "@/lib/site";
@@ -11,11 +13,12 @@ export const revalidate = 3600;
 
 export async function GET() {
   const siteUrl = getSiteUrl();
-  const programs = await readFeedPrograms();
+  const [programs, events] = await Promise.all([readFeedPrograms(), readFeedEvents()]);
   const xml = createFeedXml({
     siteName: getSiteName(),
     siteUrl,
-    programs
+    programs,
+    events
   });
 
   return new Response(xml, {
@@ -24,6 +27,18 @@ export async function GET() {
       "Cache-Control": `public, max-age=${FEED_REVALIDATE_SECONDS}`
     }
   });
+}
+
+async function readFeedEvents() {
+  if (!hasRequiredEnv(["TURSO_DATABASE_URL"])) {
+    return [];
+  }
+
+  try {
+    return await listRecentEvents(getDb(), FEED_LIMIT);
+  } catch {
+    return [];
+  }
 }
 
 async function readFeedPrograms() {
@@ -38,11 +53,15 @@ async function readFeedPrograms() {
   }
 }
 
-function createFeedXml(input: { siteName: string; siteUrl: string; programs: ProgramListItem[] }) {
+function createFeedXml(input: { siteName: string; siteUrl: string; programs: ProgramListItem[]; events: EventListItem[] }) {
   const now = new Date();
+  const feedItems = [
+    ...input.programs.map((program) => createProgramFeedItem(program, input.siteUrl)),
+    ...input.events.map((event) => createEventFeedItem(event, input.siteUrl))
+  ];
   const items =
-    input.programs.length > 0
-      ? input.programs.map((program) => createProgramFeedItem(program, input.siteUrl)).join("")
+    feedItems.length > 0
+      ? feedItems.join("")
       : createDefaultFeedItem(input.siteName, input.siteUrl, now);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -56,6 +75,21 @@ function createFeedXml(input: { siteName: string; siteUrl: string; programs: Pro
     ${items}
   </channel>
 </rss>`;
+}
+
+function createEventFeedItem(event: EventListItem, siteUrl: string) {
+  const link = `${siteUrl}/events/${event.slug}`;
+  const pubDate = event.createdAt ?? event.eventStart ?? new Date();
+
+  return `
+    <item>
+      <title>${escapeXml(event.title)}</title>
+      <link>${escapeXml(link)}</link>
+      <guid isPermaLink="true">${escapeXml(link)}</guid>
+      <description>${escapeXml(getEventSummary(event))}</description>
+      <pubDate>${pubDate.toUTCString()}</pubDate>
+      <category>${escapeXml(event.eventType ?? "행사정보")}</category>
+    </item>`;
 }
 
 function createProgramFeedItem(program: ProgramListItem, siteUrl: string) {

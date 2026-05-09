@@ -1,19 +1,24 @@
 import { ArrowRight, MapPinned, Search } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "./_components/empty-state";
+import { EventCard } from "./_components/event-card";
 import { ProgramCard } from "./_components/program-card";
+import { readEventData } from "@/lib/events/page-data";
+import { listUpcomingEvents } from "@/lib/events/query-repository";
 import { readProgramData } from "@/lib/programs/page-data";
 import { countActiveProgramsByCategory, countProgramsByRegions, listClosingPrograms } from "@/lib/programs/query-repository";
 import { regionRows } from "@/lib/regions";
 
 const HOME_PROGRAM_LIMIT = 3;
+const HOME_EVENT_LIMIT = 3;
 const HOME_CATEGORY_LIMIT = 4;
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const [closingPrograms, categoryRows, regionCounts] = await Promise.all([
+  const [closingPrograms, upcomingEvents, categoryRows, regionCounts] = await Promise.all([
     readProgramData([], (db) => listClosingPrograms(db, HOME_PROGRAM_LIMIT)),
+    readEventData([], (db) => listUpcomingEvents(db, HOME_EVENT_LIMIT)),
     readProgramData([], (db) => countActiveProgramsByCategory(db, HOME_CATEGORY_LIMIT)),
     readProgramData([], (db) => countProgramsByRegions(db, regionRows))
   ]);
@@ -28,6 +33,9 @@ export default async function HomePage() {
             창업머니맵
           </Link>
           <div className="flex items-center gap-2 text-sm text-slate-600">
+            <Link href="/events" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
+              행사정보
+            </Link>
             <Link href="/check" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
               적합도 체크
             </Link>
@@ -104,6 +112,29 @@ export default async function HomePage() {
           </div>
         ) : (
           <EmptyState title="표시할 마감 공고가 없습니다" description="DB 동기화가 완료되면 마감일이 가까운 공고가 이 영역에 표시됩니다." />
+        )}
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-ink">창업 행사정보</h2>
+            <p className="mt-1 text-sm text-slate-600">교육, 세미나, 전시회, 사업설명회 일정을 행사일 순서로 정리했습니다.</p>
+          </div>
+          <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-brand">
+            전체 보기
+            <ArrowRight size={16} aria-hidden />
+          </Link>
+        </div>
+
+        {upcomingEvents.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {upcomingEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="표시할 행사정보가 없습니다" description="행사정보 동기화가 완료되면 주요 일정이 이 영역에 표시됩니다." />
         )}
       </section>
 
