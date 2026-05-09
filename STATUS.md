@@ -1,6 +1,6 @@
 # Status | 마지막: 2026-05-09
 ## 현재 작업
-GitHub Actions runner 직접 Bizinfo sync 전환 중.
+GitHub Actions runner 직접 Bizinfo sync 전환 완료.
 ## 최근 변경 (최근 5개만)
 - 05-09: Vercel 경유 sync 실패 회피를 위해 GitHub Actions runner 직접 Turso upsert 스크립트 추가
 - 05-09: 기업마당 Vercel 10건 호출도 500 반환해 GitHub Actions sync를 최신 1건 호출로 축소
@@ -8,7 +8,7 @@ GitHub Actions runner 직접 Bizinfo sync 전환 중.
 - 05-09: Vercel→기업마당 ECONNRESET 완화를 위해 sync 기본 배치와 workflow 호출을 10건으로 제한
 - 05-09: Bizinfo slug 충돌 방지를 위해 공고 ID를 slug 끝에 포함
 ## TODO
-- [ ] `CRON_ENABLED=true` 전환 전 GitHub Actions sync 재검증
+- [x] `CRON_ENABLED=true` 전환 전 GitHub Actions sync 재검증
 - [ ] Gemini 구조화/임베딩 단계 구현
 - [ ] 행사정보 API 대응 기능 설계
 ## 결정사항
