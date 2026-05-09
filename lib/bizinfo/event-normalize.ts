@@ -2,6 +2,8 @@ import type { BizinfoRawItem } from "./types";
 import { createEventSlug } from "@/lib/events/slug";
 import type { EventStatus, EventUpsertInput } from "@/lib/events/types";
 
+const BIZINFO_ORIGIN = "https://www.bizinfo.go.kr";
+
 const FIELD_CANDIDATES = {
   eventInfoId: ["eventInfoId", "seq"],
   title: ["nttNm", "title"],
@@ -34,7 +36,7 @@ export function normalizeBizinfoEventItem(item: BizinfoRawItem, now = new Date()
   const createdAt = parseBizinfoDate(readString(item, FIELD_CANDIDATES.createdAt)) ?? now;
   const eventType = readString(item, FIELD_CANDIDATES.eventType);
   const areaName = readString(item, FIELD_CANDIDATES.areaName);
-  const rawUrl = readString(item, FIELD_CANDIDATES.rawUrl) ?? readString(item, FIELD_CANDIDATES.originUrl);
+  const rawUrl = normalizeBizinfoUrl(readString(item, FIELD_CANDIDATES.rawUrl)) ?? readString(item, FIELD_CANDIDATES.originUrl);
   const year = eventPeriod.start?.getFullYear() ?? createdAt.getFullYear();
 
   if (!rawUrl) {
@@ -64,14 +66,26 @@ export function normalizeBizinfoEventItem(item: BizinfoRawItem, now = new Date()
     status: calculateEventStatus(eventPeriod, now),
     rawUrl,
     originUrl: readString(item, FIELD_CANDIDATES.originUrl),
-    attachmentUrl: readString(item, FIELD_CANDIDATES.attachmentUrl),
+    attachmentUrl: normalizeBizinfoUrl(readString(item, FIELD_CANDIDATES.attachmentUrl)),
     attachmentName: readString(item, FIELD_CANDIDATES.attachmentName),
-    printFileUrl: readString(item, FIELD_CANDIDATES.printFileUrl),
+    printFileUrl: normalizeBizinfoUrl(readString(item, FIELD_CANDIDATES.printFileUrl)),
     printFileName: readString(item, FIELD_CANDIDATES.printFileName),
     rawJson: JSON.stringify(item),
     lastSyncedAt: now,
     createdAt
   };
+}
+
+function normalizeBizinfoUrl(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value, BIZINFO_ORIGIN).toString();
+  } catch {
+    return value;
+  }
 }
 
 export function parseBizinfoPeriod(value: string | null) {
