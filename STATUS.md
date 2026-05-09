@@ -1,17 +1,18 @@
 # Status | 마지막: 2026-05-10
 ## 현재 작업
-RSS/검색엔진 자동 제출 구현 완료. 다음 작업은 Gemini 구조화/임베딩 단계 구현.
+네이버 RSS 형식 오류 수정 완료. 다음 작업은 Gemini 구조화/임베딩 단계 구현.
 ## 최근 변경 (최근 5개만)
+- 05-10: 네이버 RSS 인식을 위해 BOM 제거와 기본 RSS item 추가
 - 05-10: `/feed.xml` RSS와 Search Console/IndexNow 제출 스크립트 추가
 - 05-10: GSC 서비스 계정 `id-ai-179@cursorai-451704.iam.gserviceaccount.com` 소유자 추가 완료 확인
 - 05-10: GA4 측정 ID `G-5FJ0PMBPHJ` 전역 태그 추가
 - 05-10: Google/Naver 사이트 소유확인 메타 태그 전역 추가
-- 05-10: 홈/마감/지역 페이지를 목업 대신 `programs` 조회 데이터로 연결
 ## TODO
 - [x] 홈/마감/지역 페이지를 Turso 실제 `programs` 데이터로 연결
 - [x] Google/Naver 사이트 소유확인 메타 태그 추가
 - [x] GA4 태그 추가
 - [x] `/feed.xml` RSS와 검색엔진 제출 스크립트 추가
+- [x] 네이버 RSS 형식 오류 수정
 - [ ] Gemini 구조화/임베딩 단계 구현
 - [ ] 행사정보 API 대응 기능 설계
 ## 결정사항

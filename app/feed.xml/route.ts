@@ -1,6 +1,6 @@
 import { getDb } from "@/db";
 import { hasRequiredEnv } from "@/lib/env";
-import { formatDate, getProgramSummary, type ProgramListItem } from "@/lib/programs/display";
+import { getProgramSummary, type ProgramListItem } from "@/lib/programs/display";
 import { listRecentProgramsForFeed } from "@/lib/programs/query-repository";
 import { getSiteName, getSiteUrl } from "@/lib/site";
 
@@ -40,23 +40,25 @@ async function readFeedPrograms() {
 
 function createFeedXml(input: { siteName: string; siteUrl: string; programs: ProgramListItem[] }) {
   const now = new Date();
-  const items = input.programs.map((program) => createFeedItem(program, input.siteUrl)).join("");
+  const items =
+    input.programs.length > 0
+      ? input.programs.map((program) => createProgramFeedItem(program, input.siteUrl)).join("")
+      : createDefaultFeedItem(input.siteName, input.siteUrl, now);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0">
   <channel>
     <title>${escapeXml(input.siteName)}</title>
     <link>${escapeXml(input.siteUrl)}</link>
     <description>창업지원사업, 정책자금, 지자체 보조금 최신 공고 모음</description>
     <language>ko-KR</language>
     <lastBuildDate>${now.toUTCString()}</lastBuildDate>
-    <atom:link href="${escapeXml(`${input.siteUrl}/feed.xml`)}" rel="self" type="application/rss+xml" />
     ${items}
   </channel>
 </rss>`;
 }
 
-function createFeedItem(program: ProgramListItem, siteUrl: string) {
+function createProgramFeedItem(program: ProgramListItem, siteUrl: string) {
   const link = `${siteUrl}/programs/${program.slug}`;
   const pubDate = program.applicationStart ?? program.applicationEnd ?? new Date();
 
@@ -68,13 +70,24 @@ function createFeedItem(program: ProgramListItem, siteUrl: string) {
       <description>${escapeXml(getProgramSummary(program))}</description>
       <pubDate>${pubDate.toUTCString()}</pubDate>
       <category>${escapeXml(program.categoryCode ?? "지원사업")}</category>
-      <source url="${escapeXml(program.rawUrl)}">원공고</source>
-      <comments>마감 ${escapeXml(formatDate(program.applicationEnd))}</comments>
+    </item>`;
+}
+
+function createDefaultFeedItem(siteName: string, siteUrl: string, pubDate: Date) {
+  return `
+    <item>
+      <title>${escapeXml(`${siteName} 창업지원금 공고 모음`)}</title>
+      <link>${escapeXml(siteUrl)}</link>
+      <guid isPermaLink="true">${escapeXml(siteUrl)}</guid>
+      <description>창업지원사업, 정책자금, 지자체 보조금을 한곳에서 확인할 수 있습니다.</description>
+      <pubDate>${pubDate.toUTCString()}</pubDate>
+      <category>창업지원금</category>
     </item>`;
 }
 
 function escapeXml(value: string) {
   return value
+    .replace(/^\uFEFF/, "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
