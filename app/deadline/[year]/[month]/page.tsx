@@ -1,5 +1,10 @@
 import { CalendarClock } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { EmptyState } from "@/app/_components/empty-state";
+import { ProgramCard } from "@/app/_components/program-card";
+import { readProgramData } from "@/lib/programs/page-data";
+import { listProgramsByDeadlineMonth } from "@/lib/programs/query-repository";
 
 type DeadlinePageProps = {
   params: Promise<{
@@ -9,22 +14,36 @@ type DeadlinePageProps = {
 };
 
 export const revalidate = 3600;
+const DEADLINE_PAGE_LIMIT = 50;
 
 export async function generateMetadata({ params }: DeadlinePageProps) {
   const { year, month } = await params;
 
   return {
     title: `${year}년 ${month}월 마감 창업지원금`,
-    description: `${year}년 ${month}월 마감 예정 창업지원사업 탐색 페이지입니다.`
+    description: `${year}년 ${month}월에 신청이 마감되는 창업지원사업 공고를 확인하세요.`,
+    alternates: {
+      canonical: `/deadline/${year}/${month}`
+    }
   };
 }
 
 export default async function DeadlinePage({ params }: DeadlinePageProps) {
   const { year, month } = await params;
+  const parsedYear = Number(year);
+  const parsedMonth = Number(month);
+
+  if (!isValidDeadlineParams(parsedYear, parsedMonth)) {
+    notFound();
+  }
+
+  const programs = await readProgramData([], (db) =>
+    listProgramsByDeadlineMonth(db, parsedYear, parsedMonth, DEADLINE_PAGE_LIMIT)
+  );
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="mx-auto max-w-4xl px-4 py-12">
+      <section className="mx-auto max-w-5xl px-4 py-12">
         <Link href="/" className="text-sm font-semibold text-brand">
           창업머니맵
         </Link>
@@ -34,10 +53,24 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
             {year}년 {month}월 마감 창업지원금
           </h1>
           <p className="mt-3 leading-7 text-slate-600">
-            마감 임박 공고 정렬은 Bizinfo sync와 status refresh 기능 구현 후 실제 데이터로 연결합니다.
+            해당 월에 신청 접수가 끝나는 실제 동기화 공고를 마감일 순서로 정리했습니다.
           </p>
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {programs.length > 0 ? (
+            programs.map((program) => <ProgramCard key={program.id} program={program} />)
+          ) : (
+            <EmptyState
+              title="해당 월 마감 공고가 없습니다"
+              description="DB에 해당 월 마감일이 저장된 공고가 있으면 이 목록에 표시됩니다."
+            />
+          )}
         </div>
       </section>
     </main>
   );
+}
+
+function isValidDeadlineParams(year: number, month: number) {
+  return Number.isInteger(year) && Number.isInteger(month) && year >= 2020 && year <= 2100 && month >= 1 && month <= 12;
 }

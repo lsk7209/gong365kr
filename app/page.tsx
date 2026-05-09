@@ -1,8 +1,25 @@
-import { ArrowRight, CalendarClock, CheckCircle2, MapPinned, Search } from "lucide-react";
+import { ArrowRight, MapPinned, Search } from "lucide-react";
 import Link from "next/link";
-import { featuredPrograms, regionRows, targetRows } from "@/lib/mock-data";
+import { EmptyState } from "./_components/empty-state";
+import { ProgramCard } from "./_components/program-card";
+import { readProgramData } from "@/lib/programs/page-data";
+import { countActiveProgramsByCategory, countProgramsByRegions, listClosingPrograms } from "@/lib/programs/query-repository";
+import { regionRows } from "@/lib/regions";
 
-export default function HomePage() {
+const HOME_PROGRAM_LIMIT = 3;
+const HOME_CATEGORY_LIMIT = 4;
+
+export const revalidate = 3600;
+
+export default async function HomePage() {
+  const [closingPrograms, categoryRows, regionCounts] = await Promise.all([
+    readProgramData([], (db) => listClosingPrograms(db, HOME_PROGRAM_LIMIT)),
+    readProgramData([], (db) => countActiveProgramsByCategory(db, HOME_CATEGORY_LIMIT)),
+    readProgramData([], (db) => countProgramsByRegions(db, regionRows))
+  ]);
+  const deadlineHref = createDeadlineHref(closingPrograms[0]?.applicationEnd ?? new Date());
+  const regionCountMap = new Map(regionCounts.map((item) => [item.code, item.count]));
+
   return (
     <main className="min-h-screen">
       <header className="border-b border-line bg-white">
@@ -14,7 +31,7 @@ export default function HomePage() {
             <Link href="/check" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
               적합도 체크
             </Link>
-            <Link href="/deadline/2026/06" className="rounded-md bg-brand px-3 py-2 font-semibold text-white">
+            <Link href={deadlineHref} className="rounded-md bg-brand px-3 py-2 font-semibold text-white">
               마감 공고
             </Link>
           </div>
@@ -52,12 +69,16 @@ export default function HomePage() {
           <aside className="rounded-lg border border-line bg-slate-50 p-5 shadow-panel">
             <h2 className="text-base font-bold text-ink">이번 주 우선 확인 항목</h2>
             <div className="mt-4 space-y-3">
-              {targetRows.map((item) => (
+              {categoryRows.length > 0 ? categoryRows.map((item) => (
                 <div key={item.label} className="flex items-center justify-between rounded-md bg-white p-3">
                   <span className="text-sm font-medium text-slate-700">{item.label}</span>
                   <span className="text-sm font-bold text-brand">{item.count}건</span>
                 </div>
-              ))}
+              )) : (
+                <div className="rounded-md bg-white p-3 text-sm leading-6 text-slate-600">
+                  동기화된 활성 공고가 있으면 분야별 건수가 표시됩니다.
+                </div>
+              )}
             </div>
           </aside>
         </div>
@@ -67,38 +88,28 @@ export default function HomePage() {
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-ink">마감 임박 공고</h2>
-            <p className="mt-1 text-sm text-slate-600">Sprint 1에서는 목업 데이터로 화면 구조를 검증합니다.</p>
+            <p className="mt-1 text-sm text-slate-600">실제 동기화된 공고 중 마감일이 가까운 지원사업입니다.</p>
           </div>
-          <Link href="/deadline/2026/06" className="inline-flex items-center gap-1 text-sm font-semibold text-brand">
+          <Link href={deadlineHref} className="inline-flex items-center gap-1 text-sm font-semibold text-brand">
             전체 보기
             <ArrowRight size={16} aria-hidden />
           </Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {featuredPrograms.map((program) => (
-            <article key={program.slug} className="rounded-lg border border-line bg-white p-5 shadow-panel">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="rounded-md bg-teal-50 px-2.5 py-1 text-xs font-bold text-brand">{program.category}</span>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-signal">
-                  <CalendarClock size={14} aria-hidden />
-                  {program.deadline}
-                </span>
-              </div>
-              <h3 className="min-h-14 text-lg font-bold leading-7 text-ink">{program.title}</h3>
-              <p className="mt-3 min-h-16 text-sm leading-6 text-slate-600">{program.summary}</p>
-              <div className="mt-4 flex items-center gap-2 text-sm text-slate-700">
-                <CheckCircle2 size={16} className="text-brand" aria-hidden />
-                {program.target}
-              </div>
-            </article>
-          ))}
-        </div>
+        {closingPrograms.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {closingPrograms.map((program) => (
+              <ProgramCard key={program.id} program={program} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="표시할 마감 공고가 없습니다" description="DB 동기화가 완료되면 마감일이 가까운 공고가 이 영역에 표시됩니다." />
+        )}
       </section>
 
       <section className="border-t border-line bg-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
-          <h2 className="text-xl font-bold text-ink">지역별 탐색 준비 현황</h2>
+          <h2 className="text-xl font-bold text-ink">지역별 활성 공고</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {regionRows.map((region) => (
               <Link
@@ -108,6 +119,9 @@ export default function HomePage() {
               >
                 <span className="text-sm text-slate-500">{region.group}</span>
                 <strong className="mt-1 block text-lg text-ink">{region.name}</strong>
+                <span className="mt-2 block text-sm font-semibold text-brand">
+                  {regionCountMap.get(region.code) ?? 0}건
+                </span>
               </Link>
             ))}
           </div>
@@ -115,4 +129,11 @@ export default function HomePage() {
       </section>
     </main>
   );
+}
+
+function createDeadlineHref(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `/deadline/${year}/${month}`;
 }
