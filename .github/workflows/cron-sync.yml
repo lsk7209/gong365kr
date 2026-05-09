@@ -3,6 +3,7 @@ name: StartupMoneyMap cron
 on:
   schedule:
     - cron: "*/30 * * * *"
+    - cron: "15 * * * *"
     - cron: "0 21 * * *"
     - cron: "0 22 * * *"
   workflow_dispatch:
@@ -14,6 +15,7 @@ on:
         type: choice
         options:
           - sync
+          - sync-events
           - refresh-status
           - generate-meta
           - submit-index
@@ -44,6 +46,32 @@ jobs:
 
       - name: Run Bizinfo sync
         run: pnpm tsx scripts/sync-bizinfo.ts --pageUnit=10
+        env:
+          BIZINFO_API_KEY: ${{ secrets.BIZINFO_API_KEY }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+
+  sync-events:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'sync-events') || (github.event.schedule == '15 * * * *' && vars.CRON_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Bizinfo event sync
+        run: pnpm tsx scripts/sync-bizinfo-events.ts --pageUnit=10
         env:
           BIZINFO_API_KEY: ${{ secrets.BIZINFO_API_KEY }}
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}

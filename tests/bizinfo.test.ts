@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { extractBizinfoItems } from "@/lib/bizinfo/client";
+import { normalizeBizinfoEventItem, parseBizinfoPeriod } from "@/lib/bizinfo/event-normalize";
 import { normalizeBizinfoItem, parseApplicationPeriod } from "@/lib/bizinfo/normalize";
 import { calculateProgramStatus } from "@/lib/programs/status";
 
@@ -53,5 +54,40 @@ describe("Bizinfo parser", () => {
       }),
       "closed"
     );
+  });
+
+  it("normalizes event API fields", () => {
+    const now = new Date(Date.UTC(2026, 4, 8));
+    const event = normalizeBizinfoEventItem(
+      {
+        seq: "EVEN_0001",
+        title: "[Seoul] Startup seminar",
+        areaNm: "서울",
+        eventType: "세미나",
+        description: "<p>Startup education event</p>",
+        originOrg: "Seoul Startup Center",
+        rceptPd: "2026-05-01 ~ 2026-05-20",
+        eventPeriod: "20260521 ~ 20260521",
+        bizinfoUrl: "https://www.bizinfo.go.kr/event",
+        registDe: "20260501"
+      },
+      now
+    );
+
+    assert.ok(event);
+    assert.equal(event.eventInfoId, "EVEN_0001");
+    assert.equal(event.source, "bizinfo");
+    assert.equal(event.status, "upcoming");
+    assert.equal(event.areaName, "서울");
+    assert.equal(event.summaryShort, "Startup education event");
+    assert.equal(event.eventStart?.toISOString(), "2026-05-21T00:00:00.000Z");
+    assert.match(event.slug, /^seminar-seoul-startup-seminar-2026-even-0001$/);
+  });
+
+  it("parses compact event periods", () => {
+    const period = parseBizinfoPeriod("20260521 ~ 20260522");
+
+    assert.equal(period.start?.toISOString(), "2026-05-21T00:00:00.000Z");
+    assert.equal(period.end?.toISOString(), "2026-05-22T00:00:00.000Z");
   });
 });

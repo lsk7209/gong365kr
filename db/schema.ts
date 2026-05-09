@@ -2,7 +2,9 @@ import { relations } from "drizzle-orm";
 import { blob, index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const programSourceValues = ["bizinfo", "kstartup", "semas", "kosmes"] as const;
+export const eventSourceValues = ["bizinfo"] as const;
 export const programStatusValues = ["upcoming", "active", "closed"] as const;
+export const eventStatusValues = ["upcoming", "active", "closed"] as const;
 export const contentStatusValues = ["draft", "review", "published", "rejected"] as const;
 
 export const programs = sqliteTable(
@@ -46,6 +48,42 @@ export const programMeta = sqliteTable("program_meta", {
   difficultyScore: integer("difficulty_score"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
 });
+
+export const events = sqliteTable(
+  "events",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    eventInfoId: text("event_info_id").unique().notNull(),
+    source: text("source", { enum: eventSourceValues }).notNull(),
+    slug: text("slug").unique().notNull(),
+    title: text("title").notNull(),
+    summaryShort: text("summary_short"),
+    areaName: text("area_name"),
+    eventType: text("event_type"),
+    originOrg: text("origin_org"),
+    categoryCode: text("category_code"),
+    receptionStart: integer("reception_start", { mode: "timestamp" }),
+    receptionEnd: integer("reception_end", { mode: "timestamp" }),
+    eventStart: integer("event_start", { mode: "timestamp" }),
+    eventEnd: integer("event_end", { mode: "timestamp" }),
+    status: text("status", { enum: eventStatusValues }).notNull(),
+    rawUrl: text("raw_url").notNull(),
+    originUrl: text("origin_url"),
+    attachmentUrl: text("attachment_url"),
+    attachmentName: text("attachment_name"),
+    printFileUrl: text("print_file_url"),
+    printFileName: text("print_file_name"),
+    rawJson: text("raw_json"),
+    lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull()
+  },
+  (table) => [
+    index("idx_events_status").on(table.status),
+    index("idx_events_event_end").on(table.eventEnd),
+    index("idx_events_source").on(table.source),
+    index("idx_events_slug").on(table.slug)
+  ]
+);
 
 export const programContent = sqliteTable("program_content", {
   programId: integer("program_id")

@@ -1,16 +1,24 @@
-import { BIZINFO_ENDPOINT, BIZINFO_REQUEST_HEADERS, DEFAULT_BIZINFO_PAGE_UNIT } from "./constants";
+import { BIZINFO_ENDPOINT, BIZINFO_EVENT_ENDPOINT, BIZINFO_REQUEST_HEADERS, DEFAULT_BIZINFO_PAGE_UNIT } from "./constants";
 import type { BizinfoFetchResult, BizinfoRawItem } from "./types";
 import { retryFetch } from "@/lib/http/retry-fetch";
 
-type FetchBizinfoProgramsInput = {
+type FetchBizinfoItemsInput = {
   apiKey: string;
   pageIndex?: number;
   pageUnit?: number;
   hashtags?: string;
 };
 
-export async function fetchBizinfoPrograms(input: FetchBizinfoProgramsInput): Promise<BizinfoFetchResult> {
-  const url = new URL(BIZINFO_ENDPOINT);
+export async function fetchBizinfoPrograms(input: FetchBizinfoItemsInput): Promise<BizinfoFetchResult> {
+  return fetchBizinfoItems(BIZINFO_ENDPOINT, input);
+}
+
+export async function fetchBizinfoEvents(input: FetchBizinfoItemsInput): Promise<BizinfoFetchResult> {
+  return fetchBizinfoItems(BIZINFO_EVENT_ENDPOINT, input);
+}
+
+async function fetchBizinfoItems(endpoint: string, input: FetchBizinfoItemsInput): Promise<BizinfoFetchResult> {
+  const url = new URL(endpoint);
   url.searchParams.set("crtfcKey", input.apiKey);
   url.searchParams.set("dataType", "json");
   url.searchParams.set("pageIndex", String(input.pageIndex ?? 1));
@@ -31,7 +39,7 @@ export async function fetchBizinfoPrograms(input: FetchBizinfoProgramsInput): Pr
   });
 
   if (!response.ok) {
-    throw new Error(`기업마당 API 호출 실패: ${response.status}`);
+    throw new Error(`Bizinfo API request failed: ${response.status}`);
   }
 
   const payload: unknown = await response.json();
