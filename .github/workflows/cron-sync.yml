@@ -27,12 +27,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Call Bizinfo sync endpoint
-        run: |
-          curl --fail-with-body --show-error --silent \
-            "${{ secrets.VERCEL_BASE }}/api/cron/sync?pageUnit=1" \
-            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Bizinfo sync
+        run: pnpm tsx scripts/sync-bizinfo.ts --pageUnit=10
+        env:
+          BIZINFO_API_KEY: ${{ secrets.BIZINFO_API_KEY }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
 
   refresh-status:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'refresh-status') || (github.event.schedule == '0 21 * * *' && vars.CRON_ENABLED == 'true')
