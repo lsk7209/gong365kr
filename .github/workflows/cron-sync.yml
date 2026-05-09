@@ -95,8 +95,8 @@ jobs:
       - name: Submit sitemap and feed
         run: pnpm tsx scripts/submit-search-index.ts
         env:
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.VERCEL_BASE }}
-          SEARCH_SUBMIT_SITE_URL: ${{ secrets.VERCEL_BASE }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
+          SEARCH_SUBMIT_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
           GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
           GSC_CLIENT_EMAIL: ${{ secrets.GSC_CLIENT_EMAIL }}
