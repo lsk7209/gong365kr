@@ -1,0 +1,204 @@
+import { createHash, createSign } from "node:crypto";
+import { getSiteUrl, normalizeSiteUrl } from "@/lib/site";
+
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_SITEMAP_SCOPE = "https://www.googleapis.com/auth/webmasters";
+const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
+const DEFAULT_URL_PATHS = ["/", "/check", "/regions", "/sitemap.xml", "/feed.xml"] as const;
+
+type SubmissionResult = {
+  target: string;
+  status: "submitted" | "skipped" | "failed";
+  detail: string;
+};
+
+type ServiceAccountInput = {
+  clientEmail: string;
+  privateKey: string;
+};
+
+async function main() {
+  const siteUrl = getSearchSiteUrl();
+  const urls = createSubmissionUrls(siteUrl);
+  const results = await Promise.all([submitGoogleSitemap(siteUrl), submitIndexNow(siteUrl, urls)]);
+
+  for (const result of results) {
+    console.log(`${result.target}: ${result.status} - ${result.detail}`);
+  }
+
+  if (results.some((result) => result.status === "failed")) {
+    process.exitCode = 1;
+  }
+}
+
+async function submitGoogleSitemap(siteUrl: string): Promise<SubmissionResult> {
+  const serviceAccount = readServiceAccount();
+
+  if (!serviceAccount) {
+    return {
+      target: "google-sitemap",
+      status: "skipped",
+      detail: "GSC service account env is missing"
+    };
+  }
+
+  const accessToken = await createGoogleAccessToken(serviceAccount);
+  const propertyUrl = process.env.GSC_SITE_URL ?? siteUrl;
+  const sitemapUrl = `${siteUrl}/sitemap.xml`;
+  const endpoint = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(
+    propertyUrl
+  )}/sitemaps/${encodeURIComponent(sitemapUrl)}`;
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    return {
+      target: "google-sitemap",
+      status: "failed",
+      detail: `${response.status} ${await response.text()}`
+    };
+  }
+
+  return {
+    target: "google-sitemap",
+    status: "submitted",
+    detail: sitemapUrl
+  };
+}
+
+async function submitIndexNow(siteUrl: string, urls: string[]): Promise<SubmissionResult> {
+  const key = process.env.INDEXNOW_KEY;
+
+  if (!key) {
+    return {
+      target: "indexnow",
+      status: "skipped",
+      detail: "INDEXNOW_KEY env is missing"
+    };
+  }
+
+  const response = await fetch(INDEXNOW_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    body: JSON.stringify({
+      host: new URL(siteUrl).host,
+      key,
+      keyLocation: `${siteUrl}/${key}.txt`,
+      urlList: urls
+    })
+  });
+
+  if (!response.ok && response.status !== 202) {
+    return {
+      target: "indexnow",
+      status: "failed",
+      detail: `${response.status} ${await response.text()}`
+    };
+  }
+
+  return {
+    target: "indexnow",
+    status: "submitted",
+    detail: `${response.status} ${urls.length} urls`
+  };
+}
+
+function getSearchSiteUrl() {
+  return normalizeSiteUrl(process.env.SEARCH_SUBMIT_SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? getSiteUrl());
+}
+
+function createSubmissionUrls(siteUrl: string) {
+  return DEFAULT_URL_PATHS.map((path) => `${siteUrl}${path === "/" ? "" : path}`);
+}
+
+function readServiceAccount(): ServiceAccountInput | null {
+  const rawJson = process.env.GSC_SERVICE_ACCOUNT_JSON;
+
+  if (rawJson) {
+    const parsed = JSON.parse(rawJson) as { client_email?: string; private_key?: string };
+
+    if (parsed.client_email && parsed.private_key) {
+      return {
+        clientEmail: parsed.client_email,
+        privateKey: parsed.private_key
+      };
+    }
+  }
+
+  if (!process.env.GSC_CLIENT_EMAIL || !process.env.GSC_PRIVATE_KEY) {
+    return null;
+  }
+
+  return {
+    clientEmail: process.env.GSC_CLIENT_EMAIL,
+    privateKey: process.env.GSC_PRIVATE_KEY.replace(/\\n/g, "\n")
+  };
+}
+
+async function createGoogleAccessToken(input: ServiceAccountInput) {
+  const now = Math.floor(Date.now() / 1000);
+  const jwt = signJwt(
+    {
+      alg: "RS256",
+      typ: "JWT"
+    },
+    {
+      iss: input.clientEmail,
+      scope: GOOGLE_SITEMAP_SCOPE,
+      aud: GOOGLE_TOKEN_URL,
+      exp: now + 3600,
+      iat: now
+    },
+    input.privateKey
+  );
+  const body = new URLSearchParams({
+    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion: jwt
+  });
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body
+  });
+
+  if (!response.ok) {
+    throw new Error(`Google token request failed: ${response.status} ${await response.text()}`);
+  }
+
+  const parsed = (await response.json()) as { access_token?: string };
+
+  if (!parsed.access_token) {
+    throw new Error("Google token response did not include access_token");
+  }
+
+  return parsed.access_token;
+}
+
+function signJwt(header: object, payload: object, privateKey: string) {
+  const encodedHeader = base64Url(JSON.stringify(header));
+  const encodedPayload = base64Url(JSON.stringify(payload));
+  const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+  const signature = createSign("RSA-SHA256").update(unsignedToken).sign(privateKey);
+
+  return `${unsignedToken}.${base64Url(signature)}`;
+}
+
+function base64Url(input: string | Buffer) {
+  const buffer = typeof input === "string" ? Buffer.from(input) : input;
+
+  return buffer.toString("base64").replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+main().catch((error) => {
+  const fingerprint = createHash("sha256").update(error instanceof Error ? error.message : String(error)).digest("hex").slice(0, 8);
+  console.error(`submit-search-index failed (${fingerprint}):`, error instanceof Error ? error.message : error);
+  process.exit(1);
+});

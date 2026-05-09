@@ -55,6 +55,15 @@ export async function listProgramsByRegion(
     .limit(limit);
 }
 
+export async function listRecentProgramsForFeed(db: DbClient, limit: number): Promise<ProgramListItem[]> {
+  return db
+    .select(programListFields)
+    .from(programs)
+    .where(sql`${programs.status} <> 'closed'`)
+    .orderBy(desc(programs.lastSyncedAt))
+    .limit(limit);
+}
+
 export async function countActiveProgramsByCategory(db: DbClient, limit: number): Promise<ProgramCategoryCount[]> {
   const activeCount = count();
   const rows = await db

@@ -16,6 +16,7 @@ on:
           - sync
           - refresh-status
           - generate-meta
+          - submit-index
 
 concurrency:
   group: startupmoneymap-cron-${{ github.event.schedule || github.event.inputs.task || 'manual' }}
@@ -71,3 +72,33 @@ jobs:
             "${{ secrets.VERCEL_BASE }}/api/cron/generate-meta" \
             --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
+
+  submit-index:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'submit-index'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Submit sitemap and feed
+        run: pnpm tsx scripts/submit-search-index.ts
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.VERCEL_BASE }}
+          SEARCH_SUBMIT_SITE_URL: ${{ secrets.VERCEL_BASE }}
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
+          GSC_CLIENT_EMAIL: ${{ secrets.GSC_CLIENT_EMAIL }}
+          GSC_PRIVATE_KEY: ${{ secrets.GSC_PRIVATE_KEY }}
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}

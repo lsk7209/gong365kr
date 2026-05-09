@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { getSiteName, getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gong365kr.vercel.app";
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "창업머니맵";
+const siteUrl = getSiteUrl();
+const siteName = getSiteName();
 const defaultAdsensePublisherId = "ca-pub-3050601904412736";
 const defaultGaId = "G-5FJ0PMBPHJ";
 const defaultGoogleSiteVerification = "KzXCRzOdWolZAjS1EDgmX9PKMKklb2ILHO0vIv0fRGA";
