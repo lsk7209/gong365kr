@@ -1,18 +1,21 @@
 # Status | 마지막: 2026-05-10
 ## 현재 작업
-검색엔진 소유확인 메타 태그 추가 완료. 다음 작업은 Gemini 구조화/임베딩 단계 구현.
+GA4 태그 추가 완료. 다음 작업은 Gemini 구조화/임베딩 단계 구현.
 ## 최근 변경 (최근 5개만)
+- 05-10: GSC 서비스 계정 `id-ai-179@cursorai-451704.iam.gserviceaccount.com` 소유자 추가 완료 확인
+- 05-10: GA4 측정 ID `G-5FJ0PMBPHJ` 전역 태그 추가
 - 05-10: Google/Naver 사이트 소유확인 메타 태그 전역 추가
 - 05-10: 홈/마감/지역 페이지를 목업 대신 `programs` 조회 데이터로 연결
 - 05-10: 공고 카드/빈 상태/지역 상수/페이지 데이터 래퍼 추가
-- 05-09: GitHub Actions variable `CRON_ENABLED=true` 전환
-- 05-09: GitHub Actions runner 직접 Turso upsert 스크립트 추가
 ## TODO
 - [x] 홈/마감/지역 페이지를 Turso 실제 `programs` 데이터로 연결
 - [x] Google/Naver 사이트 소유확인 메타 태그 추가
+- [x] GA4 태그 추가
 - [ ] Gemini 구조화/임베딩 단계 구현
 - [ ] 행사정보 API 대응 기능 설계
 ## 결정사항
+- GSC: 서비스 계정 소유자 권한 추가 완료 상태로 이후 GSC/Indexing API 자동화 가능
+- GA4: `NEXT_PUBLIC_GA_ID` 우선, 미설정 시 제공받은 `G-5FJ0PMBPHJ` 사용
 - 검색엔진 인증: env 값 우선, 미설정 시 제공받은 인증값을 기본값으로 사용
 - 페이지 데이터 조회: DB env 누락/조회 실패 시 렌더 실패 대신 빈 상태 표시
 - 지역 필터: `programs_regions` 매핑 전까지 공고명/요약/기관 텍스트 키워드 기반으로 연결

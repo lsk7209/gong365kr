@@ -5,10 +5,12 @@ import "./globals.css";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gong365kr.vercel.app";
 const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "창업머니맵";
 const defaultAdsensePublisherId = "ca-pub-3050601904412736";
+const defaultGaId = "G-5FJ0PMBPHJ";
 const defaultGoogleSiteVerification = "KzXCRzOdWolZAjS1EDgmX9PKMKklb2ILHO0vIv0fRGA";
 const defaultNaverSiteVerification = "66f0f3f9b53c2c92af321f493745658e8843db7f";
 const adsenseClient =
   process.env.NEXT_PUBLIC_ADSENSE_PUB_ID ?? process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? defaultAdsensePublisherId;
+const gaId = process.env.NEXT_PUBLIC_GA_ID ?? defaultGaId;
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION ?? defaultGoogleSiteVerification;
 const naverSiteVerification = process.env.NAVER_VERIFICATION ?? defaultNaverSiteVerification;
 
@@ -46,6 +48,19 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
+        {gaId ? (
+          <>
+            <Script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){window.dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        ) : null}
         {adsenseClient ? (
           <Script
             async
