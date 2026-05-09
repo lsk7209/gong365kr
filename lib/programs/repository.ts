@@ -1,6 +1,7 @@
 import { eq, isNull, sql } from "drizzle-orm";
 import { programMeta, programs } from "@/db/schema";
 import type { getDb } from "@/db";
+import type { EligibilityStructured, FitnessAxes } from "./meta-types";
 import { toUnixSeconds } from "./status";
 import type { ProgramUpsertInput } from "./types";
 
@@ -17,6 +18,9 @@ export type PendingMetaProgram = {
 export type ProgramMetaExtractionInput = {
   programId: number;
   detailPdfUrl: string;
+  eligibilityStructured: EligibilityStructured;
+  fitnessAxes: FitnessAxes;
+  similarityEmbedding: Buffer;
   updatedAt: Date;
 };
 
@@ -116,11 +120,17 @@ export async function saveProgramMetaExtraction(db: DbClient, input: ProgramMeta
     .insert(programMeta)
     .values({
       programId: input.programId,
+      eligibilityStructured: JSON.stringify(input.eligibilityStructured),
+      fitnessAxes: JSON.stringify(input.fitnessAxes),
+      similarityEmbedding: input.similarityEmbedding,
       updatedAt: input.updatedAt
     })
     .onConflictDoUpdate({
       target: programMeta.programId,
       set: {
+        eligibilityStructured: sql.raw("excluded.eligibility_structured"),
+        fitnessAxes: sql.raw("excluded.fitness_axes"),
+        similarityEmbedding: sql.raw("excluded.similarity_embedding"),
         updatedAt: sql.raw("excluded.updated_at")
       }
     });

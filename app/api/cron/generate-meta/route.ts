@@ -6,7 +6,7 @@ import { isAuthorizedCronRequest } from "@/lib/http/cron-auth";
 import { defaultMetaPipelineDeps, processProgramMetaBatch } from "@/lib/programs/meta-pipeline";
 import { listProgramsPendingMeta, saveProgramMetaExtraction } from "@/lib/programs/repository";
 
-const REQUIRED_RUNTIME_ENV = ["TURSO_DATABASE_URL"];
+const REQUIRED_RUNTIME_ENV = ["TURSO_DATABASE_URL", "GEMINI_API_KEY"];
 const DEFAULT_BATCH_LIMIT = 5;
 const MAX_BATCH_LIMIT = 20;
 

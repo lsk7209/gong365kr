@@ -1,5 +1,7 @@
 import { extractPdfLinks, fetchBizinfoDetailHtml, fetchPdfBuffer } from "@/lib/bizinfo/detail";
 import { extractPdfText } from "@/lib/pdf/extract-text";
+import { createEmbeddingText, createGeminiEmbedding, generateProgramMetaWithGemini } from "@/lib/ai/gemini";
+import type { GeneratedProgramMeta } from "./meta-types";
 import type { PendingMetaProgram, ProgramMetaExtractionInput } from "./repository";
 
 export type MetaProcessStatus = "processed" | "skipped" | "failed";
@@ -17,6 +19,12 @@ export type MetaPipelineDeps = {
   extractPdfLinks: (html: string, baseUrl: string) => string[];
   fetchPdfBuffer: (url: string) => Promise<Buffer>;
   extractPdfText: (buffer: Buffer) => Promise<{ text: string }>;
+  structureProgramMeta: (input: {
+    title: string;
+    summaryShort: string | null;
+    pdfText: string;
+  }) => Promise<GeneratedProgramMeta>;
+  createEmbedding: (text: string) => Promise<Buffer>;
   saveMetaExtraction: (input: ProgramMetaExtractionInput) => Promise<void>;
 };
 
@@ -29,7 +37,9 @@ export const defaultMetaPipelineDeps: Omit<MetaPipelineDeps, "saveMetaExtraction
   fetchDetailHtml: fetchBizinfoDetailHtml,
   extractPdfLinks,
   fetchPdfBuffer,
-  extractPdfText
+  extractPdfText,
+  structureProgramMeta: generateProgramMetaWithGemini,
+  createEmbedding: createGeminiEmbedding
 };
 
 export async function processProgramMetaBatch(
@@ -60,9 +70,25 @@ async function processProgramMeta(program: PendingMetaProgram, deps: MetaPipelin
       return createResult(program.id, "skipped", null, 0, "no_valid_pdf_text");
     }
 
+    const generatedMeta = await deps.structureProgramMeta({
+      title: program.title,
+      summaryShort: program.summaryShort,
+      pdfText: extracted.text
+    });
+    const similarityEmbedding = await deps.createEmbedding(
+      createEmbeddingText({
+        title: program.title,
+        summaryShort: program.summaryShort,
+        eligibilityStructured: generatedMeta.eligibilityStructured
+      })
+    );
+
     await deps.saveMetaExtraction({
       programId: program.id,
       detailPdfUrl: extracted.detailPdfUrl,
+      eligibilityStructured: generatedMeta.eligibilityStructured,
+      fitnessAxes: generatedMeta.fitnessAxes,
+      similarityEmbedding,
       updatedAt: now
     });
 

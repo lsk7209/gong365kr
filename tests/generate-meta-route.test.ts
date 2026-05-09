@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import { GET } from "@/app/api/cron/generate-meta/route";
 import { processProgramMetaBatch, type MetaPipelineDeps } from "@/lib/programs/meta-pipeline";
+import type { GeneratedProgramMeta } from "@/lib/programs/meta-types";
 import type { PendingMetaProgram, ProgramMetaExtractionInput } from "@/lib/programs/repository";
 
 const originalEnv = { ...process.env };
@@ -24,6 +25,7 @@ describe("Generate meta route", () => {
   it("returns missing env before touching the database", async () => {
     process.env.CRON_SECRET = "test-secret";
     delete process.env.TURSO_DATABASE_URL;
+    delete process.env.GEMINI_API_KEY;
 
     const response = await GET(
       new Request("http://localhost:3000/api/cron/generate-meta", {
@@ -36,12 +38,12 @@ describe("Generate meta route", () => {
 
     assert.equal(response.status, 503);
     assert.equal(body.error, "missing_runtime_env");
-    assert.deepEqual(body.required, ["TURSO_DATABASE_URL"]);
+    assert.deepEqual(body.required, ["TURSO_DATABASE_URL", "GEMINI_API_KEY"]);
   });
 });
 
 describe("Program meta pipeline", () => {
-  it("extracts a PDF link, parses text, and saves meta extraction", async () => {
+  it("extracts a PDF link, parses text, structures meta, embeds text, and saves meta extraction", async () => {
     const saved: ProgramMetaExtractionInput[] = [];
     const deps = createDeps({
       saveMetaExtraction: async (input) => {
@@ -55,11 +57,14 @@ describe("Program meta pipeline", () => {
     assert.equal(summary.skipped, 0);
     assert.equal(summary.failed, 0);
     assert.equal(summary.results[0].detailPdfUrl, "https://www.bizinfo.go.kr/files/notice.pdf");
-    assert.equal(summary.results[0].extractedTextLength, 6);
+    assert.equal(summary.results[0].extractedTextLength, 8);
     assert.deepEqual(saved, [
       {
         programId: 1,
         detailPdfUrl: "https://www.bizinfo.go.kr/files/notice.pdf",
+        eligibilityStructured: structuredMeta.eligibilityStructured,
+        fitnessAxes: structuredMeta.fitnessAxes,
+        similarityEmbedding: embeddingBuffer,
         updatedAt: new Date("2026-05-08T00:00:00Z")
       }
     ]);
@@ -100,7 +105,7 @@ describe("Program meta pipeline", () => {
           throw new Error("Invalid PDF structure.");
         }
 
-        return { text: "정상 PDF 본문" };
+        return { text: "valid PDF text" };
       },
       fetchPdfBuffer: async (url) => Buffer.from(url.endsWith(".hwpx") ? "bad" : "good"),
       saveMetaExtraction: async (input) => {
@@ -116,10 +121,37 @@ describe("Program meta pipeline", () => {
   });
 });
 
+const structuredMeta: GeneratedProgramMeta = {
+  eligibilityStructured: {
+    summary: "Seoul early-stage founder support",
+    ageMax: null,
+    businessAgeMaxMonths: 36,
+    regions: ["Seoul"],
+    industries: [],
+    gender: "any",
+    targets: ["pre-founder"],
+    requiredDocuments: ["business plan"],
+    applicationMethod: "online",
+    supportAmount: "up to 100 million KRW",
+    cautions: ["check official notice"]
+  },
+  fitnessAxes: {
+    stage: 1,
+    region: 0.8,
+    industry: 0,
+    age: 0,
+    businessAge: 0.7,
+    gender: 0,
+    documents: 0.5
+  }
+};
+
+const embeddingBuffer = Buffer.from(new Float32Array([0.1, 0.2]).buffer);
+
 function createProgram(): PendingMetaProgram {
   return {
     id: 1,
-    title: "테스트 지원사업",
+    title: "Test support program",
     summaryShort: null,
     rawUrl: "https://www.bizinfo.go.kr/detail",
     detailPdfUrl: null
@@ -128,10 +160,12 @@ function createProgram(): PendingMetaProgram {
 
 function createDeps(overrides: Partial<MetaPipelineDeps> = {}): MetaPipelineDeps {
   return {
-    fetchDetailHtml: async () => '<a href="/files/notice.pdf">공고문</a>',
+    fetchDetailHtml: async () => '<a href="/files/notice.pdf">notice</a>',
     extractPdfLinks: (_html, baseUrl) => [new URL("/files/notice.pdf", baseUrl).toString()],
     fetchPdfBuffer: async () => Buffer.from("pdf"),
-    extractPdfText: async () => ({ text: "본문 텍스트" }),
+    extractPdfText: async () => ({ text: "PDF text" }),
+    structureProgramMeta: async () => structuredMeta,
+    createEmbedding: async () => embeddingBuffer,
     saveMetaExtraction: async () => undefined,
     ...overrides
   };
