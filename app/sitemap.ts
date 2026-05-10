@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { hasRequiredEnv } from "@/lib/env";
 import { listEventSlugsForSitemap } from "@/lib/events/query-repository";
 import { listProgramSlugsForSitemap } from "@/lib/programs/query-repository";
+import { regionRows } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/site";
 
 const EVENT_SITEMAP_LIMIT = 200;
@@ -44,9 +45,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.8
     },
+    ...readRegionSitemapUrls(siteUrl, now),
     ...programUrls,
     ...eventUrls
   ];
+}
+
+function readRegionSitemapUrls(siteUrl: string, lastModified: Date): MetadataRoute.Sitemap {
+  return regionRows.map((region) => ({
+    url: `${siteUrl}/regions/${region.code}`,
+    lastModified,
+    changeFrequency: "daily",
+    priority: 0.65
+  }));
 }
 
 async function readProgramSitemapUrls(siteUrl: string): Promise<MetadataRoute.Sitemap> {
