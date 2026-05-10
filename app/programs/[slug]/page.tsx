@@ -2,6 +2,7 @@ import { CalendarClock, CheckCircle2, ExternalLink, FileText, WalletCards } from
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { RelatedProgramList } from "@/app/_components/related-program-list";
 import {
   formatDate,
   formatDeadline,
@@ -19,7 +20,6 @@ type ProgramDetailPageProps = {
     slug: string;
   }>;
 };
-
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: ProgramDetailPageProps) {
@@ -112,6 +112,8 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
           </div>
         </section>
 
+        <RelatedProgramList program={program} />
+
         <section className="py-8">
           <h2 className="text-xl font-bold text-ink">다음 행동</h2>
           <p className="mt-3 text-sm leading-7 text-slate-700">
@@ -152,11 +154,9 @@ function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value
     </div>
   );
 }
-
 function CheckBlock({ title, description }: { title: string; description: string }) {
   return <article className="rounded-lg border border-line p-4"><h3 className="font-bold text-ink">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{description}</p></article>;
 }
-
 function FaqItem({ question, children }: { question: string; children: ReactNode }) {
   return <article><h3 className="font-bold text-ink">{question}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{children}</p></article>;
 }

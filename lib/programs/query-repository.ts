@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, like, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, like, lt, ne, or, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { programs } from "@/db/schema";
 import type { RegionRow } from "@/lib/regions";
@@ -91,6 +91,36 @@ export async function getProgramBySlug(db: DbClient, slug: string): Promise<Prog
     .limit(1);
 
   return program ?? null;
+}
+
+export async function listRelatedPrograms(
+  db: DbClient,
+  program: ProgramListItem,
+  limit: number
+): Promise<ProgramListItem[]> {
+  const relatedConditions = [
+    program.categoryCode ? eq(programs.categoryCode, program.categoryCode) : undefined,
+    program.agency ? eq(programs.agency, program.agency) : undefined,
+    program.executor ? eq(programs.executor, program.executor) : undefined
+  ].filter(Boolean);
+
+  if (relatedConditions.length === 0) {
+    return [];
+  }
+
+  return db
+    .select(programListFields)
+    .from(programs)
+    .where(
+      and(
+        validProgramCondition(),
+        sql`${programs.status} <> 'closed'`,
+        ne(programs.id, program.id),
+        or(...relatedConditions)
+      )
+    )
+    .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
+    .limit(limit);
 }
 
 export async function listProgramSlugsForSitemap(db: DbClient, limit: number) {
