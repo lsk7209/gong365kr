@@ -3,7 +3,7 @@ import { fetchBizinfoEvents } from "@/lib/bizinfo/client";
 import { DEFAULT_BIZINFO_PAGE_UNIT } from "@/lib/bizinfo/constants";
 import { normalizeBizinfoEventItem } from "@/lib/bizinfo/event-normalize";
 import { getRequiredEnv } from "@/lib/env";
-import { upsertEvents } from "@/lib/events/repository";
+import { refreshEventStatuses, upsertEvents } from "@/lib/events/repository";
 
 const DEFAULT_PAGE_INDEX = 1;
 
@@ -17,7 +17,9 @@ async function main() {
     pageUnit
   });
   const normalizedEvents = fetchResult.items.map((item) => normalizeBizinfoEventItem(item, now)).filter((event) => event !== null);
-  const result = await upsertEvents(getDb(), normalizedEvents);
+  const db = getDb();
+  const result = await upsertEvents(db, normalizedEvents);
+  const refreshed = await refreshEventStatuses(db, now);
 
   process.stdout.write(
     `${JSON.stringify({
@@ -28,6 +30,7 @@ async function main() {
       fetched: fetchResult.items.length,
       normalized: normalizedEvents.length,
       insertedOrUpdated: result.insertedOrUpdated,
+      refreshed,
       requestedUrl: fetchResult.requestedUrl
     })}\n`
   );

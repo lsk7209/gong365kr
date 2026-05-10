@@ -22,13 +22,12 @@ export async function listUpcomingEvents(
   now = new Date(),
   filters: EventFilterInput = {}
 ): Promise<EventListItem[]> {
-  const nowSeconds = Math.floor(now.getTime() / 1000);
-
   return db
     .select(eventListFields)
     .from(events)
-    .where(and(activeEventCondition(nowSeconds), eventFilterCondition(filters)))
+    .where(eventFilterCondition(filters))
     .orderBy(
+      eventClosedSort(now),
       asc(sql`coalesce(${events.eventStart}, ${events.receptionEnd}, ${events.eventEnd}, ${events.lastSyncedAt})`),
       desc(events.lastSyncedAt)
     )
@@ -45,7 +44,7 @@ export async function getEventBySlug(db: DbClient, slug: string): Promise<EventL
   return event ?? null;
 }
 
-export async function listEventAreas(db: DbClient, now = new Date(), limit = 20): Promise<EventFacet[]> {
+export async function listEventAreas(db: DbClient, limit = 20): Promise<EventFacet[]> {
   const areaCount = count();
   const rows = await db
     .select({
@@ -53,7 +52,7 @@ export async function listEventAreas(db: DbClient, now = new Date(), limit = 20)
       count: areaCount
     })
     .from(events)
-    .where(and(activeEventCondition(Math.floor(now.getTime() / 1000)), isNotNull(events.areaName)))
+    .where(isNotNull(events.areaName))
     .groupBy(events.areaName)
     .orderBy(desc(areaCount), asc(events.areaName))
     .limit(limit);
@@ -66,7 +65,7 @@ export async function listEventAreas(db: DbClient, now = new Date(), limit = 20)
     }));
 }
 
-export async function listEventTypes(db: DbClient, now = new Date(), limit = 20): Promise<EventFacet[]> {
+export async function listEventTypes(db: DbClient, limit = 20): Promise<EventFacet[]> {
   const typeCount = count();
   const rows = await db
     .select({
@@ -74,7 +73,7 @@ export async function listEventTypes(db: DbClient, now = new Date(), limit = 20)
       count: typeCount
     })
     .from(events)
-    .where(and(activeEventCondition(Math.floor(now.getTime() / 1000)), isNotNull(events.eventType)))
+    .where(isNotNull(events.eventType))
     .groupBy(events.eventType)
     .orderBy(desc(typeCount), asc(events.eventType))
     .limit(limit);
@@ -123,10 +122,6 @@ const eventListFields = {
   lastSyncedAt: events.lastSyncedAt
 };
 
-function activeEventCondition(nowSeconds: number) {
-  return sql`${events.status} <> 'closed' and (${events.eventEnd} is null or ${events.eventEnd} >= ${nowSeconds})`;
-}
-
 function eventFilterCondition(filters: EventFilterInput) {
   const conditions = [
     filters.areaName ? eq(events.areaName, filters.areaName) : undefined,
@@ -147,4 +142,14 @@ function eventKeywordCondition(keyword: string) {
     like(events.areaName, pattern),
     like(events.eventType, pattern)
   );
+}
+
+function eventClosedSort(now: Date) {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+
+  return sql`case
+    when ${events.status} = 'closed' then 1
+    when ${events.eventEnd} is not null and (${events.eventEnd} + 86399) < ${nowSeconds} then 1
+    else 0
+  end`;
 }

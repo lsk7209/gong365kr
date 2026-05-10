@@ -1,19 +1,16 @@
 # 창업머니맵
-창업지원사업 공고를 지역/분야/마감일 기준으로 정리하고 원문 확인까지 안내하는 정보형 사이트입니다.
+업데이트: 2026. 5. 10. 18시 24분 59초
 
 ## 핵심 카테고리
-- 지원사업 통합 조회: /programs
-- 행사/설명회: /events
-- 지역별 공고: /regions
-- 마감 임박 공고: /deadline/[YYYY]/[MM]
-- 적합도 체크: /check
+- 지원사업 공고: /programs (0건 샘플)
+- 이벤트 정보: /events (0건 샘플, 종료 행사 포함)
+- 지역별 목록: /regions (17개)
+- 마감 임박: /deadline/2026/05
+- 적합성 가이드: /check
 
 ## 제출 채널
 - sitemap.xml: /sitemap.xml
 - RSS: /feed.xml
-- AEO 인덱스: /llms-full.txt
-- AI 색인 데이터: /ai-index.json
-
-## 운영 원칙
-- 공고 내용은 텍스트 기준으로 정리되고 외부 링크만 원문 페이지로 연결됩니다.
-- 원문으로 넘어가면 신청일정, 조건, 서류를 재확인해야 합니다.
+- llms: /llms.txt
+- llms-full: /llms-full.txt
+- ai-index: /ai-index.json

@@ -59,17 +59,14 @@ function createFeedXml(input: { siteName: string; siteUrl: string; programs: Pro
     ...input.programs.map((program) => createProgramFeedItem(program, input.siteUrl)),
     ...input.events.map((event) => createEventFeedItem(event, input.siteUrl))
   ];
-  const items =
-    feedItems.length > 0
-      ? feedItems.join("")
-      : createDefaultFeedItem(input.siteName, input.siteUrl, now);
+  const items = feedItems.length > 0 ? feedItems.join("") : createDefaultFeedItem(input.siteName, input.siteUrl, now);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
     <title>${escapeXml(input.siteName)}</title>
     <link>${escapeXml(input.siteUrl)}</link>
-    <description>창업지원사업, 정책자금, 지자체 보조금 최신 공고 모음</description>
+    <description>창업지원사업, 정책자금, 지역별 공고와 이벤트 최신 정보</description>
     <language>ko-KR</language>
     <lastBuildDate>${now.toUTCString()}</lastBuildDate>
     ${items}
@@ -88,7 +85,7 @@ function createEventFeedItem(event: EventListItem, siteUrl: string) {
       <guid isPermaLink="true">${escapeXml(link)}</guid>
       <description>${escapeXml(getEventSummary(event))}</description>
       <pubDate>${pubDate.toUTCString()}</pubDate>
-      <category>${escapeXml(event.eventType ?? "행사정보")}</category>
+      <category>${escapeXml(event.eventType ?? "이벤트 정보")}</category>
     </item>`;
 }
 
@@ -110,10 +107,10 @@ function createProgramFeedItem(program: ProgramListItem, siteUrl: string) {
 function createDefaultFeedItem(siteName: string, siteUrl: string, pubDate: Date) {
   return `
     <item>
-      <title>${escapeXml(`${siteName} 창업지원금 공고 모음`)}</title>
+      <title>${escapeXml(`${siteName} 창업지원사업 공고 모음`)}</title>
       <link>${escapeXml(siteUrl)}</link>
       <guid isPermaLink="true">${escapeXml(siteUrl)}</guid>
-      <description>창업지원사업, 정책자금, 지자체 보조금을 한곳에서 확인할 수 있습니다.</description>
+      <description>창업지원사업, 정책자금, 지역별 보조금을 한곳에서 확인할 수 있습니다.</description>
       <pubDate>${pubDate.toUTCString()}</pubDate>
       <category>창업지원금</category>
     </item>`;

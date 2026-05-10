@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { hasRequiredEnv } from "@/lib/env";
+import { refreshEventStatuses } from "@/lib/events/repository";
 import { isAuthorizedCronRequest } from "@/lib/http/cron-auth";
 import { refreshProgramStatuses } from "@/lib/programs/repository";
 
@@ -21,10 +22,14 @@ export async function GET(request: Request) {
     );
   }
 
-  const refreshed = await refreshProgramStatuses(getDb());
+  const db = getDb();
+  const [programs, events] = await Promise.all([refreshProgramStatuses(db), refreshEventStatuses(db)]);
 
   return NextResponse.json({
     ok: true,
-    refreshed
+    refreshed: {
+      programs,
+      events
+    }
   });
 }

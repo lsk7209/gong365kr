@@ -26,13 +26,13 @@ type EventFilters = {
 
 export const metadata = {
   title: "창업 이벤트 정보",
-  description: "중소기업과 창업자가 참여할 수 있는 교육, 행사, 전시, 사업설명회 정보를 모아 정리합니다.",
+  description: "진행 예정 행사와 종료된 창업 이벤트 기록을 함께 확인할 수 있습니다.",
   alternates: {
     canonical: "/events"
   },
   openGraph: {
     title: "창업 이벤트 정보",
-    description: "교육, 행사, 전시, 사업설명회 등 창업자가 확인할 만한 이벤트 정보를 모아 보여드립니다.",
+    description: "교육, 행사, 전시, 사업설명회 정보를 일정순으로 정리하고 종료된 행사도 기록으로 유지합니다.",
     locale: "ko_KR",
     type: "website"
   }
@@ -52,9 +52,10 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       <section className="mx-auto max-w-5xl px-4 py-12">
         <header className="rounded-lg border border-line bg-slate-50 p-6">
           <CalendarDays className="text-signal" size={32} aria-hidden />
-          <h1 className="mt-4 text-3xl font-bold text-ink">창업 이벤트 정보</h1>
+          <h1 className="mt-4 text-3xl font-semibold text-ink">창업 이벤트 정보</h1>
           <p className="mt-3 leading-7 text-slate-600">
             기업마당과 공공기관에서 제공하는 교육, 행사, 전시, 사업설명회 정보를 일정순으로 정리했습니다.
+            종료된 행사도 숨기지 않고 하단에 기록으로 유지합니다.
           </p>
         </header>
 
@@ -143,7 +144,7 @@ function SearchForm({ filters }: { filters: EventFilters }) {
       />
       <button
         type="submit"
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-semibold text-white"
       >
         <Search size={16} aria-hidden />
         검색
@@ -167,7 +168,7 @@ function FilterGroup({
 }) {
   return (
     <div>
-      <div className="mb-2 text-sm font-bold text-ink">{title}</div>
+      <div className="mb-2 text-sm font-semibold text-ink">{title}</div>
       <div className="flex flex-wrap gap-2">
         <FilterLink label="전체" href={createFilterHref(paramName, undefined, nextFilters)} active={!activeValue} />
         {facets.map((facet) => (
@@ -187,7 +188,7 @@ function FilterLink({ label, href, active }: { label: string; href: string; acti
   return (
     <Link
       href={href}
-      className={`rounded-md border px-3 py-2 text-sm font-semibold ${
+      className={`rounded-full border px-3 py-2 text-sm font-semibold ${
         active ? "border-brand bg-brand text-white" : "border-line bg-white text-slate-700 hover:border-brand"
       }`}
     >

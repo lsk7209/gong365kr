@@ -42,3 +42,40 @@ export async function upsertEvents(db: DbClient, inputs: EventUpsertInput[]) {
 
   return { insertedOrUpdated: inputs.length };
 }
+
+export async function refreshEventStatuses(db: DbClient, now = new Date()) {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+
+  const closed = await db
+    .update(events)
+    .set({
+      status: "closed",
+      lastSyncedAt: now
+    })
+    .where(sql`${events.eventEnd} is not null and (${events.eventEnd} + 86399) < ${nowSeconds}`);
+
+  const upcoming = await db
+    .update(events)
+    .set({
+      status: "upcoming",
+      lastSyncedAt: now
+    })
+    .where(sql`${events.eventStart} is not null and ${events.eventStart} > ${nowSeconds}`);
+
+  const active = await db
+    .update(events)
+    .set({
+      status: "active",
+      lastSyncedAt: now
+    })
+    .where(
+      sql`(${events.eventStart} is null or ${events.eventStart} <= ${nowSeconds})
+        and (${events.eventEnd} is null or (${events.eventEnd} + 86399) >= ${nowSeconds})`
+    );
+
+  return {
+    closed: Number(closed.rowsAffected),
+    upcoming: Number(upcoming.rowsAffected),
+    active: Number(active.rowsAffected)
+  };
+}

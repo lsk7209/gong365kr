@@ -47,6 +47,14 @@ export function getEventArea(event: Pick<EventListItem, "areaName">) {
   return event.areaName ?? DEFAULT_AREA;
 }
 
+export function isEventClosed(event: Pick<EventListItem, "eventEnd" | "status">, now = new Date()) {
+  if (event.status === "closed") {
+    return true;
+  }
+
+  return Boolean(event.eventEnd && endOfDay(event.eventEnd).getTime() < now.getTime());
+}
+
 export function formatEventDate(date: Date | null) {
   if (!date) {
     return "상시";
@@ -75,13 +83,19 @@ export function formatEventPeriod(start: Date | null, end: Date | null) {
   return formatEventDate(start ?? end);
 }
 
-export function formatEventDeadline(date: Date | null, now = new Date()) {
-  if (!date) {
+export function formatEventDeadline(event: Pick<EventListItem, "receptionEnd" | "eventEnd" | "status">, now = new Date()) {
+  if (isEventClosed({ eventEnd: event.eventEnd, status: event.status }, now)) {
+    return "행사 종료";
+  }
+
+  const deadlineDate = event.receptionEnd ?? event.eventEnd;
+
+  if (!deadlineDate) {
     return "접수일 확인";
   }
 
   const today = startOfDay(now).getTime();
-  const deadline = startOfDay(date).getTime();
+  const deadline = startOfDay(deadlineDate).getTime();
   const daysLeft = Math.ceil((deadline - today) / DAY_MS);
 
   if (daysLeft < 0) {
@@ -97,4 +111,8 @@ export function formatEventDeadline(date: Date | null, now = new Date()) {
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }

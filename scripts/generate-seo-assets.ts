@@ -68,7 +68,7 @@ async function main() {
     ...eventSitemapRows.map((item) => ({
       url: `/events/${item.slug}`,
       title: "창업 이벤트 정보",
-      description: "창업 이벤트 상세 페이지입니다.",
+      description: "창업 이벤트 상세 페이지입니다. 종료된 행사도 기록으로 유지합니다.",
       updatedAt: toIsoDate(item.lastModified ?? now)
     }))
   ];
@@ -123,7 +123,7 @@ function buildStaticPageEntries(now: Date) {
     {
       url: "/events",
       title: "창업 이벤트 정보",
-      description: "교육, 설명회, 전시회 등 창업 이벤트를 일정 기준으로 확인합니다."
+      description: "교육, 설명회, 전시회 등 창업 이벤트를 일정 기준으로 확인하고 종료 행사도 기록으로 유지합니다."
     },
     {
       url: "/regions",
@@ -155,7 +155,7 @@ ${period}
 
 ## 핵심 카테고리
 - 지원사업 공고: /programs (${programCount}건 샘플)
-- 이벤트 정보: /events (${eventCount}건 샘플)
+- 이벤트 정보: /events (${eventCount}건 샘플, 종료 행사 포함)
 - 지역별 목록: /regions (${totalRegions}개)
 - 마감 임박: ${currentDeadlinePath}
 - 적합성 가이드: /check
@@ -190,7 +190,8 @@ ${buildRecentProgramSection(data.programs)}
 ## /events
 - 정의: 창업 행사와 설명회 목록
 - 필터: 지역, 유형, 검색어
-- 핵심 체크: 행사 기간, 접수 기간, 출처
+- 핵심 체크: 행사 기간, 접수 기간, 출처, 종료 여부
+- 종료된 행사도 URL을 유지해 이전 조건 확인과 검색 노출에 사용
 ${buildRecentEventSection(data.events)}
 
 ## /regions

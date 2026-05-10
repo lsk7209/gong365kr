@@ -102,7 +102,7 @@ export function parseBizinfoPeriod(value: string | null) {
 }
 
 function calculateEventStatus(period: { start: Date | null; end: Date | null }, now: Date): EventStatus {
-  if (period.end && period.end < now) {
+  if (period.end && endOfDay(period.end).getTime() < now.getTime()) {
     return "closed";
   }
 
@@ -157,4 +157,8 @@ function parseBizinfoDate(value: string | null) {
 
 function createUtcDate(year: number, month: number, day: number) {
   return new Date(Date.UTC(year, month - 1, day));
+}
+
+function endOfDay(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }
