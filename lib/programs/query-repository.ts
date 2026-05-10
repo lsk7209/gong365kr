@@ -1,8 +1,8 @@
-import { and, asc, count, desc, eq, gte, isNotNull, like, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, like, lt, or, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { programs } from "@/db/schema";
 import type { RegionRow } from "@/lib/regions";
-import type { ProgramListItem } from "./display";
+import { PROGRAM_CATEGORY_LABELS, type ProgramListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
 
@@ -26,7 +26,7 @@ export async function listClosingPrograms(db: DbClient, limit: number, now = new
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(gte(programs.applicationEnd, now), sql`${programs.status} <> 'closed'`))
+    .where(and(validProgramCondition(), gte(programs.applicationEnd, now), sql`${programs.status} <> 'closed'`))
     .orderBy(asc(programs.applicationEnd))
     .limit(limit);
 }
@@ -39,7 +39,7 @@ export async function listActivePrograms(
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(sql`${programs.status} <> 'closed'`, programFilterCondition(filters)))
+    .where(and(validProgramCondition(), sql`${programs.status} <> 'closed'`, programFilterCondition(filters)))
     .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
     .limit(limit);
 }
@@ -56,7 +56,7 @@ export async function listProgramsByDeadlineMonth(
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(gte(programs.applicationEnd, start), lt(programs.applicationEnd, end)))
+    .where(and(validProgramCondition(), gte(programs.applicationEnd, start), lt(programs.applicationEnd, end)))
     .orderBy(asc(programs.applicationEnd))
     .limit(limit);
 }
@@ -69,7 +69,7 @@ export async function listProgramsByRegion(
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(regionKeywordCondition(region.keywords), sql`${programs.status} <> 'closed'`))
+    .where(and(validProgramCondition(), regionKeywordCondition(region.keywords), sql`${programs.status} <> 'closed'`))
     .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
     .limit(limit);
 }
@@ -78,13 +78,17 @@ export async function listRecentProgramsForFeed(db: DbClient, limit: number): Pr
   return db
     .select(programListFields)
     .from(programs)
-    .where(sql`${programs.status} <> 'closed'`)
+    .where(and(validProgramCondition(), sql`${programs.status} <> 'closed'`))
     .orderBy(desc(programs.lastSyncedAt))
     .limit(limit);
 }
 
 export async function getProgramBySlug(db: DbClient, slug: string): Promise<ProgramListItem | null> {
-  const [program] = await db.select(programListFields).from(programs).where(eq(programs.slug, slug)).limit(1);
+  const [program] = await db
+    .select(programListFields)
+    .from(programs)
+    .where(and(validProgramCondition(), eq(programs.slug, slug)))
+    .limit(1);
 
   return program ?? null;
 }
@@ -96,6 +100,7 @@ export async function listProgramSlugsForSitemap(db: DbClient, limit: number) {
       lastModified: programs.lastSyncedAt
     })
     .from(programs)
+    .where(validProgramCondition())
     .orderBy(desc(programs.lastSyncedAt))
     .limit(limit);
 }
@@ -108,7 +113,7 @@ export async function countActiveProgramsByCategory(db: DbClient, limit: number)
       count: activeCount
     })
     .from(programs)
-    .where(and(sql`${programs.status} <> 'closed'`, isNotNull(programs.categoryCode)))
+    .where(and(validProgramCondition(), sql`${programs.status} <> 'closed'`, isNotNull(programs.categoryCode)))
     .groupBy(programs.categoryCode)
     .orderBy(desc(activeCount))
     .limit(limit);
@@ -127,7 +132,7 @@ async function countProgramsByRegion(db: DbClient, region: RegionRow): Promise<R
   const [result] = await db
     .select({ count: count() })
     .from(programs)
-    .where(and(regionKeywordCondition(region.keywords), sql`${programs.status} <> 'closed'`));
+    .where(and(validProgramCondition(), regionKeywordCondition(region.keywords), sql`${programs.status} <> 'closed'`));
 
   return {
     code: region.code,
@@ -162,6 +167,10 @@ function regionKeywordCondition(keywords: readonly string[]) {
   });
 
   return or(...clauses) ?? sql`1 = 0`;
+}
+
+function validProgramCondition() {
+  return or(isNull(programs.categoryCode), inArray(programs.categoryCode, PROGRAM_CATEGORY_LABELS));
 }
 
 function programFilterCondition(filters: ProgramFilterInput) {

@@ -1,5 +1,6 @@
 import { BIZINFO_DETAIL_URL } from "./constants";
 import type { BizinfoRawItem } from "./types";
+import { isKnownProgramCategory } from "@/lib/programs/display";
 import { createProgramSlug } from "@/lib/programs/slug";
 import { calculateProgramStatus } from "@/lib/programs/status";
 import type { ProgramUpsertInput } from "@/lib/programs/types";
@@ -24,7 +25,7 @@ export function normalizeBizinfoItem(item: BizinfoRawItem, now = new Date()): Pr
     return null;
   }
 
-  const categoryCode = readString(item, FIELD_CANDIDATES.categoryCode);
+  const categoryCode = normalizeProgramCategory(readString(item, FIELD_CANDIDATES.categoryCode));
   const createdAt = parseDate(readString(item, FIELD_CANDIDATES.createdAt)) ?? now;
   const period = parseApplicationPeriod(readString(item, FIELD_CANDIDATES.period));
   const rawUrl = readString(item, FIELD_CANDIDATES.rawUrl) ?? createDetailUrl(pblancId);
@@ -85,6 +86,10 @@ function readString(item: BizinfoRawItem, keys: readonly string[]) {
 
 function normalizeText(value: string) {
   return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeProgramCategory(value: string | null) {
+  return isKnownProgramCategory(value) ? value : null;
 }
 
 function parseDate(value: string | null) {
