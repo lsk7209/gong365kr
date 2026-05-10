@@ -1,4 +1,5 @@
 import { CalendarClock, CheckCircle2, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import {
   formatDate,
   formatDeadline,
@@ -24,7 +25,11 @@ export function ProgramCard({ program }: ProgramCardProps) {
           {formatDeadline(program.applicationEnd)}
         </span>
       </div>
-      <h2 className="text-lg font-bold leading-7 text-ink">{program.title}</h2>
+      <h2 className="text-lg font-bold leading-7 text-ink">
+        <Link href={`/programs/${program.slug}`} className="hover:text-brand">
+          {program.title}
+        </Link>
+      </h2>
       <p className="mt-3 text-sm leading-6 text-slate-600">{getProgramSummary(program)}</p>
       <div className="mt-4 flex items-center gap-2 text-sm text-slate-700">
         <CheckCircle2 size={16} className="shrink-0 text-brand" aria-hidden />

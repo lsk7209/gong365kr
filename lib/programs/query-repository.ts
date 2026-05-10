@@ -1,4 +1,4 @@
-import { and, asc, count, desc, gte, isNotNull, like, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNotNull, like, lt, or, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { programs } from "@/db/schema";
 import type { RegionRow } from "@/lib/regions";
@@ -16,12 +16,30 @@ export type RegionCount = {
   count: number;
 };
 
+export type ProgramFilterInput = {
+  keyword?: string;
+  categoryCode?: string;
+};
+
 export async function listClosingPrograms(db: DbClient, limit: number, now = new Date()): Promise<ProgramListItem[]> {
   return db
     .select(programListFields)
     .from(programs)
     .where(and(gte(programs.applicationEnd, now), sql`${programs.status} <> 'closed'`))
     .orderBy(asc(programs.applicationEnd))
+    .limit(limit);
+}
+
+export async function listActivePrograms(
+  db: DbClient,
+  limit: number,
+  filters: ProgramFilterInput = {}
+): Promise<ProgramListItem[]> {
+  return db
+    .select(programListFields)
+    .from(programs)
+    .where(and(sql`${programs.status} <> 'closed'`, programFilterCondition(filters)))
+    .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
     .limit(limit);
 }
 
@@ -60,6 +78,23 @@ export async function listRecentProgramsForFeed(db: DbClient, limit: number): Pr
     .select(programListFields)
     .from(programs)
     .where(sql`${programs.status} <> 'closed'`)
+    .orderBy(desc(programs.lastSyncedAt))
+    .limit(limit);
+}
+
+export async function getProgramBySlug(db: DbClient, slug: string): Promise<ProgramListItem | null> {
+  const [program] = await db.select(programListFields).from(programs).where(eq(programs.slug, slug)).limit(1);
+
+  return program ?? null;
+}
+
+export async function listProgramSlugsForSitemap(db: DbClient, limit: number) {
+  return db
+    .select({
+      slug: programs.slug,
+      lastModified: programs.lastSyncedAt
+    })
+    .from(programs)
     .orderBy(desc(programs.lastSyncedAt))
     .limit(limit);
 }
@@ -126,4 +161,25 @@ function regionKeywordCondition(keywords: readonly string[]) {
   });
 
   return or(...clauses) ?? sql`1 = 0`;
+}
+
+function programFilterCondition(filters: ProgramFilterInput) {
+  const conditions = [
+    filters.categoryCode ? eq(programs.categoryCode, filters.categoryCode) : undefined,
+    filters.keyword ? programKeywordCondition(filters.keyword) : undefined
+  ].filter(Boolean);
+
+  return conditions.length > 0 ? and(...conditions) : undefined;
+}
+
+function programKeywordCondition(keyword: string) {
+  const pattern = `%${keyword}%`;
+
+  return or(
+    like(programs.title, pattern),
+    like(programs.summaryShort, pattern),
+    like(programs.agency, pattern),
+    like(programs.executor, pattern),
+    like(programs.categoryCode, pattern)
+  );
 }

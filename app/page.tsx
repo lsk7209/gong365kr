@@ -33,6 +33,9 @@ export default async function HomePage() {
             창업머니맵
           </Link>
           <div className="flex items-center gap-2 text-sm text-slate-600">
+            <Link href="/programs" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
+              지원사업
+            </Link>
             <Link href="/events" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
               행사정보
             </Link>
