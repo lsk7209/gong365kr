@@ -20,10 +20,7 @@ export default async function RegionsPage() {
   return (
     <main className="min-h-screen bg-white">
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <Link href="/" className="text-sm font-semibold text-brand">
-          창업머니맵
-        </Link>
-        <h1 className="mt-8 text-3xl font-bold text-ink">지역별 창업지원금</h1>
+        <h1 className="text-3xl font-bold text-ink">지역별 창업지원금</h1>
         <p className="mt-3 text-slate-600">동기화된 공고에서 지역명이 확인되는 활성 지원사업을 모았습니다.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {regionRows.map((region) => (

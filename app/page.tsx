@@ -27,28 +27,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen">
-      <header className="border-b border-line bg-white">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link href="/" className="text-lg font-bold text-ink">
-            창업머니맵
-          </Link>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <Link href="/programs" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
-              지원사업
-            </Link>
-            <Link href="/events" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
-              행사정보
-            </Link>
-            <Link href="/check" className="hidden rounded-md px-3 py-2 hover:bg-slate-100 sm:inline-flex">
-              적합도 체크
-            </Link>
-            <Link href={deadlineHref} className="rounded-md bg-brand px-3 py-2 font-semibold text-white">
-              마감 공고
-            </Link>
-          </div>
-        </nav>
-      </header>
-
       <section className="border-b border-line bg-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>

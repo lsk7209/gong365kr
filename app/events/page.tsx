@@ -44,10 +44,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   return (
     <main className="min-h-screen bg-white">
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <Link href="/" className="text-sm font-semibold text-brand">
-          창업머니맵
-        </Link>
-        <div className="mt-8 rounded-lg border border-line bg-slate-50 p-6">
+        <div className="rounded-lg border border-line bg-slate-50 p-6">
           <CalendarDays className="text-signal" size={32} aria-hidden />
           <h1 className="mt-4 text-3xl font-bold text-ink">창업 행사정보</h1>
           <p className="mt-3 leading-7 text-slate-600">

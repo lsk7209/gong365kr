@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { SiteFooter } from "@/app/_components/site-footer";
+import { SiteHeader } from "@/app/_components/site-header";
 import { getSiteName, getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -70,7 +72,11 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         ) : null}
-        {children}
+        <div className="flex min-h-screen flex-col">
+          <SiteHeader />
+          <div className="flex-1">{children}</div>
+          <SiteFooter />
+        </div>
       </body>
     </html>
   );
