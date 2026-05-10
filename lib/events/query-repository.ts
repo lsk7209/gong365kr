@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, like, or, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { events } from "@/db/schema";
 import type { EventListItem } from "./display";
@@ -8,6 +8,7 @@ type DbClient = ReturnType<typeof getDb>;
 export type EventFilterInput = {
   areaName?: string;
   eventType?: string;
+  keyword?: string;
 };
 
 export type EventFacet = {
@@ -129,8 +130,21 @@ function activeEventCondition(nowSeconds: number) {
 function eventFilterCondition(filters: EventFilterInput) {
   const conditions = [
     filters.areaName ? eq(events.areaName, filters.areaName) : undefined,
-    filters.eventType ? eq(events.eventType, filters.eventType) : undefined
+    filters.eventType ? eq(events.eventType, filters.eventType) : undefined,
+    filters.keyword ? eventKeywordCondition(filters.keyword) : undefined
   ].filter(Boolean);
 
   return conditions.length > 0 ? and(...conditions) : undefined;
+}
+
+function eventKeywordCondition(keyword: string) {
+  const pattern = `%${keyword}%`;
+
+  return or(
+    like(events.title, pattern),
+    like(events.summaryShort, pattern),
+    like(events.originOrg, pattern),
+    like(events.areaName, pattern),
+    like(events.eventType, pattern)
+  );
 }

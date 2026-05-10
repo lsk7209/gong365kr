@@ -1,4 +1,4 @@
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Search } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/app/_components/empty-state";
 import { EventCard } from "@/app/_components/event-card";
@@ -8,12 +8,20 @@ import { listEventAreas, listEventTypes, listUpcomingEvents, type EventFacet } f
 export const revalidate = 3600;
 const EVENTS_PAGE_LIMIT = 50;
 const ALL_FILTER_VALUE = "all";
+const MAX_KEYWORD_LENGTH = 40;
 
 type EventsPageProps = {
   searchParams: Promise<{
     area?: string | string[];
     type?: string | string[];
+    q?: string | string[];
   }>;
+};
+
+type EventFilters = {
+  areaName?: string;
+  eventType?: string;
+  keyword?: string;
 };
 
 export const metadata = {
@@ -31,7 +39,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     readEventData([], (db) => listEventAreas(db)),
     readEventData([], (db) => listEventTypes(db))
   ]);
-  const hasActiveFilters = Boolean(filters.areaName || filters.eventType);
+  const hasActiveFilters = Boolean(filters.areaName || filters.eventType || filters.keyword);
 
   return (
     <main className="min-h-screen bg-white">
@@ -47,22 +55,21 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           </p>
         </div>
         <section className="mt-6 border-y border-line py-5">
-          <div className="flex flex-col gap-4">
+          <SearchForm filters={filters} />
+          <div className="mt-5 flex flex-col gap-4">
             <FilterGroup
               title="지역"
               paramName="area"
               activeValue={filters.areaName}
               facets={areaFacets}
-              otherParamName="type"
-              otherValue={filters.eventType}
+              nextFilters={filters}
             />
             <FilterGroup
               title="유형"
               paramName="type"
               activeValue={filters.eventType}
               facets={typeFacets}
-              otherParamName="area"
-              otherValue={filters.areaName}
+              nextFilters={filters}
             />
           </div>
           <div className="mt-4 flex items-center justify-between gap-3 text-sm text-slate-600">
@@ -78,10 +85,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           {events.length > 0 ? (
             events.map((event) => <EventCard key={event.id} event={event} />)
           ) : (
-            <EmptyState
-              title="표시할 행사정보가 없습니다"
-              description="다른 지역이나 유형을 선택하거나, 행사정보 동기화가 완료된 뒤 다시 확인해 주세요."
-            />
+            <EmptyState title="표시할 행사정보가 없습니다" description="검색어를 줄이거나 다른 지역·유형을 선택해 주세요." />
           )}
         </div>
       </section>
@@ -89,12 +93,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   );
 }
 
-async function parseEventFilters(searchParams: EventsPageProps["searchParams"]) {
+async function parseEventFilters(searchParams: EventsPageProps["searchParams"]): Promise<EventFilters> {
   const params = await searchParams;
 
   return {
     areaName: normalizeFilterValue(params.area),
-    eventType: normalizeFilterValue(params.type)
+    eventType: normalizeFilterValue(params.type),
+    keyword: normalizeKeyword(params.q)
   };
 }
 
@@ -105,31 +110,63 @@ function normalizeFilterValue(value: string | string[] | undefined) {
   return normalized && normalized !== ALL_FILTER_VALUE ? normalized : undefined;
 }
 
+function normalizeKeyword(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const normalized = raw?.replace(/\s+/g, " ").trim().slice(0, MAX_KEYWORD_LENGTH);
+
+  return normalized || undefined;
+}
+
+function SearchForm({ filters }: { filters: EventFilters }) {
+  return (
+    <form action="/events" className="flex flex-col gap-2 sm:flex-row">
+      {filters.areaName ? <input type="hidden" name="area" value={filters.areaName} /> : null}
+      {filters.eventType ? <input type="hidden" name="type" value={filters.eventType} /> : null}
+      <label className="sr-only" htmlFor="event-search">
+        행사 검색어
+      </label>
+      <input
+        id="event-search"
+        name="q"
+        type="search"
+        defaultValue={filters.keyword ?? ""}
+        placeholder="행사명, 기관명, 지역 검색"
+        className="min-h-11 flex-1 rounded-md border border-line px-3 text-sm outline-none focus:border-brand"
+      />
+      <button
+        type="submit"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white"
+      >
+        <Search size={16} aria-hidden />
+        검색
+      </button>
+    </form>
+  );
+}
+
 function FilterGroup({
   title,
   paramName,
   activeValue,
   facets,
-  otherParamName,
-  otherValue
+  nextFilters
 }: {
   title: string;
   paramName: "area" | "type";
   activeValue: string | undefined;
   facets: EventFacet[];
-  otherParamName: "area" | "type";
-  otherValue: string | undefined;
+  nextFilters: EventFilters;
 }) {
   return (
     <div>
       <div className="mb-2 text-sm font-bold text-ink">{title}</div>
       <div className="flex flex-wrap gap-2">
-        <FilterLink label="전체" href={createFilterHref(paramName, undefined, otherParamName, otherValue)} active={!activeValue} />
+        <FilterLink label="전체" href={createFilterHref(paramName, undefined, nextFilters)} active={!activeValue} />
         {facets.map((facet) => (
           <FilterLink
             key={facet.label}
             label={`${facet.label} ${facet.count}`}
-            href={createFilterHref(paramName, facet.label, otherParamName, otherValue)}
+            href={createFilterHref(paramName, facet.label, nextFilters)}
             active={activeValue === facet.label}
           />
         ))}
@@ -151,20 +188,21 @@ function FilterLink({ label, href, active }: { label: string; href: string; acti
   );
 }
 
-function createFilterHref(
-  paramName: "area" | "type",
-  value: string | undefined,
-  otherParamName: "area" | "type",
-  otherValue: string | undefined
-) {
+function createFilterHref(paramName: "area" | "type", value: string | undefined, filters: EventFilters) {
   const params = new URLSearchParams();
+  const areaName = paramName === "area" ? value : filters.areaName;
+  const eventType = paramName === "type" ? value : filters.eventType;
 
-  if (value) {
-    params.set(paramName, value);
+  if (areaName) {
+    params.set("area", areaName);
   }
 
-  if (otherValue) {
-    params.set(otherParamName, otherValue);
+  if (eventType) {
+    params.set("type", eventType);
+  }
+
+  if (filters.keyword) {
+    params.set("q", filters.keyword);
   }
 
   const query = params.toString();
