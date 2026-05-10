@@ -7,7 +7,12 @@ import { ProgramCard } from "./_components/program-card";
 import { readEventData } from "@/lib/events/page-data";
 import { listUpcomingEvents } from "@/lib/events/query-repository";
 import { readProgramData } from "@/lib/programs/page-data";
-import { countActiveProgramsByCategory, countProgramsByRegions, listClosingPrograms } from "@/lib/programs/query-repository";
+import {
+  countActiveProgramsByCategory,
+  countProgramsByRegions,
+  listClosedPrograms,
+  listOpenPrograms
+} from "@/lib/programs/query-repository";
 import { regionRows } from "@/lib/regions";
 import { getSeoulDate } from "@/lib/time/seoul";
 
@@ -31,16 +36,18 @@ export const metadata: Metadata = {
 const HOME_PROGRAM_LIMIT = 3;
 const HOME_EVENT_LIMIT = 3;
 const HOME_CATEGORY_LIMIT = 4;
+const HOME_CLOSED_PROGRAM_LIMIT = 3;
 
 export default async function HomePage() {
-  const [closingPrograms, upcomingEvents, categoryRows, regionCounts] = await Promise.all([
-    readProgramData([], (db) => listClosingPrograms(db, HOME_PROGRAM_LIMIT)),
+  const [openPrograms, closedPrograms, upcomingEvents, categoryRows, regionCounts] = await Promise.all([
+    readProgramData([], (db) => listOpenPrograms(db, HOME_PROGRAM_LIMIT, {}, new Date())),
+    readProgramData([], (db) => listClosedPrograms(db, HOME_CLOSED_PROGRAM_LIMIT, {}, new Date())),
     readEventData([], (db) => listUpcomingEvents(db, HOME_EVENT_LIMIT)),
     readProgramData([], (db) => countActiveProgramsByCategory(db, HOME_CATEGORY_LIMIT)),
     readProgramData([], (db) => countProgramsByRegions(db, regionRows))
   ]);
 
-  const latestDeadlineUrl = createDeadlineHref(closingPrograms[0]?.applicationEnd ?? new Date());
+  const latestDeadlineUrl = createDeadlineHref(openPrograms[0]?.applicationEnd ?? new Date());
   const regionCountMap = new Map(regionCounts.map((item) => [item.code, item.count]));
   const totalPrograms = regionRows.reduce((sum, item) => sum + (regionCountMap.get(item.code) ?? 0), 0);
 
@@ -115,9 +122,9 @@ export default async function HomePage() {
               <ArrowRight size={16} aria-hidden />
             </Link>
           </div>
-          {closingPrograms.length > 0 ? (
+          {openPrograms.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-3">
-              {closingPrograms.map((program) => (
+              {openPrograms.map((program) => (
                 <ProgramCard key={program.id} program={program} />
               ))}
             </div>
@@ -128,6 +135,27 @@ export default async function HomePage() {
             />
           )}
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-normal tracking-tight text-ink">마감된 공고</h2>
+            <p className="mt-1 text-sm text-slate-600">마감된 공고는 별도 보관되어 조회를 유지합니다.</p>
+          </div>
+        </div>
+        {closedPrograms.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {closedPrograms.map((program) => (
+              <ProgramCard key={program.id} program={program} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="현재 마감된 공고가 없습니다"
+            description="마감된 공고 내역이 없습니다. 오픈 공고가 활성화되면 자동 갱신됩니다."
+          />
+        )}
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">

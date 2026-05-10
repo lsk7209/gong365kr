@@ -16,40 +16,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const siteUrl = getSiteUrl();
   const [programUrls, eventUrls] = await Promise.all([readProgramSitemapUrls(siteUrl), readEventSitemapUrls(siteUrl)]);
+  const latestContentModified = getLatestDate([...programUrls, ...eventUrls].map((item) => item.lastModified));
+  const effectiveLastModified = latestContentModified ?? now;
 
   return [
     {
       url: siteUrl,
-      lastModified: now,
+      lastModified: effectiveLastModified,
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${siteUrl}/check`,
-      lastModified: now,
+      lastModified: effectiveLastModified,
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${siteUrl}/regions`,
-      lastModified: now,
+      lastModified: effectiveLastModified,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
       url: `${siteUrl}/programs`,
-      lastModified: now,
+      lastModified: effectiveLastModified,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${siteUrl}/events`,
-      lastModified: now,
+      lastModified: effectiveLastModified,
       changeFrequency: "daily",
       priority: 0.8,
     },
-    ...readRegionSitemapUrls(siteUrl, now),
-    ...readDeadlineSitemapUrls(siteUrl, now),
+    ...readRegionSitemapUrls(siteUrl, effectiveLastModified),
+    ...readDeadlineSitemapUrls(siteUrl, effectiveLastModified),
     ...programUrls,
     ...eventUrls,
   ];
@@ -121,4 +123,12 @@ async function readEventSitemapUrls(siteUrl: string): Promise<MetadataRoute.Site
 
 function addMonths(year: number, baseMonthIndex: number, offset: number) {
   return new Date(year, baseMonthIndex + offset, 1);
+}
+
+function getLatestDate(values: Array<Date | null | undefined>) {
+  return values.reduce<Date | null>((acc, value) => {
+    if (!value) return acc;
+
+    return !acc || value.getTime() > acc.getTime() ? value : acc;
+  }, null);
 }

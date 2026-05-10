@@ -4,7 +4,10 @@ import { notFound } from "next/navigation";
 import { EmptyState } from "@/app/_components/empty-state";
 import { ProgramCard } from "@/app/_components/program-card";
 import { readProgramData } from "@/lib/programs/page-data";
-import { listProgramsByDeadlineMonth } from "@/lib/programs/query-repository";
+import {
+  listClosedProgramsByDeadlineMonth,
+  listOpenProgramsByDeadlineMonth
+} from "@/lib/programs/query-repository";
 
 type DeadlinePageProps = {
   params: Promise<{
@@ -15,6 +18,7 @@ type DeadlinePageProps = {
 
 export const revalidate = 3600;
 const DEADLINE_PAGE_LIMIT = 50;
+const DEADLINE_CLOSED_PAGE_LIMIT = 30;
 
 export async function generateMetadata({ params }: DeadlinePageProps) {
   const { year, month } = await params;
@@ -37,9 +41,14 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
     notFound();
   }
 
-  const programs = await readProgramData([], (db) =>
-    listProgramsByDeadlineMonth(db, parsedYear, parsedMonth, DEADLINE_PAGE_LIMIT)
-  );
+  const [activePrograms, closedPrograms] = await Promise.all([
+    readProgramData([], (db) =>
+      listOpenProgramsByDeadlineMonth(db, parsedYear, parsedMonth, DEADLINE_PAGE_LIMIT, new Date())
+    ),
+    readProgramData([], (db) =>
+      listClosedProgramsByDeadlineMonth(db, parsedYear, parsedMonth, DEADLINE_CLOSED_PAGE_LIMIT, new Date())
+    )
+  ]);
 
   return (
     <main className="min-h-screen bg-white">
@@ -57,8 +66,8 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
           </p>
         </header>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {programs.length > 0 ? (
-            programs.map((program) => <ProgramCard key={program.id} program={program} />)
+          {activePrograms.length > 0 ? (
+            activePrograms.map((program) => <ProgramCard key={program.id} program={program} />)
           ) : (
             <EmptyState
               title="해당 월 마감 공고가 없습니다"
@@ -66,6 +75,14 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
             />
           )}
         </div>
+        {closedPrograms.length > 0 ? (
+          <section className="mt-10" aria-label="마감 공고">
+            <h2 className="text-lg font-semibold text-ink">마감 기록</h2>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              {closedPrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+            </div>
+          </section>
+        ) : null}
       </section>
     </main>
   );

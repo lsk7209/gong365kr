@@ -5,7 +5,10 @@ import type { ReactNode } from "react";
 import { EmptyState } from "@/app/_components/empty-state";
 import { ProgramCard } from "@/app/_components/program-card";
 import { readProgramData } from "@/lib/programs/page-data";
-import { listProgramsByRegion } from "@/lib/programs/query-repository";
+import {
+  listClosedProgramsByRegion,
+  listOpenProgramsByRegion
+} from "@/lib/programs/query-repository";
 import { findRegionByCode, type RegionRow, regionRows } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/site";
 
@@ -17,6 +20,7 @@ type RegionPageProps = {
 
 export const revalidate = 3600;
 const REGION_PAGE_LIMIT = 50;
+const REGION_CLOSED_PAGE_LIMIT = 30;
 
 export function generateStaticParams() {
   return regionRows.map((region) => ({
@@ -52,8 +56,11 @@ export default async function RegionPage({ params }: RegionPageProps) {
     notFound();
   }
 
-  const programs = await readProgramData([], (db) => listProgramsByRegion(db, regionRow, REGION_PAGE_LIMIT));
-  const programCount = programs.length;
+  const [activePrograms, closedPrograms] = await Promise.all([
+    readProgramData([], (db) => listOpenProgramsByRegion(db, regionRow, REGION_PAGE_LIMIT, new Date())),
+    readProgramData([], (db) => listClosedProgramsByRegion(db, regionRow, REGION_CLOSED_PAGE_LIMIT, new Date()))
+  ]);
+  const programCount = activePrograms.length + closedPrograms.length;
   const programListHref = `/programs?region=${regionRow.code}`;
 
   return (
@@ -141,8 +148,8 @@ export default async function RegionPage({ params }: RegionPageProps) {
             </Link>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {programs.length > 0 ? (
-              programs.map((program) => <ProgramCard key={program.id} program={program} />)
+            {activePrograms.length > 0 ? (
+              activePrograms.map((program) => <ProgramCard key={program.id} program={program} />)
             ) : (
               <EmptyState
                 title={`${regionRow.name} 지역 공고가 없습니다`}
@@ -150,6 +157,14 @@ export default async function RegionPage({ params }: RegionPageProps) {
               />
             )}
           </div>
+          {closedPrograms.length > 0 ? (
+            <section className="mt-10" aria-label="마감 공고">
+              <h3 className="text-lg font-semibold text-ink">마감 기록</h3>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                {closedPrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+              </div>
+            </section>
+          ) : null}
         </section>
       </section>
     </main>

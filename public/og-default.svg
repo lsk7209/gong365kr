@@ -1,0 +1,13 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0a0b0d"/>
+      <stop offset="100%" stop-color="#1d2a4a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.25)"/>
+  <text x="640" y="270" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="58" fill="#ffffff" font-weight="700">공유경제 지원사업 안내</text>
+  <text x="640" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#d8e2ff">마감 임박 공고 · 행정지원 정보</text>
+  <text x="640" y="430" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#c8d3f5">gong365.kr</text>
+</svg>

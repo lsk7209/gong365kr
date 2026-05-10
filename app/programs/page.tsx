@@ -6,6 +6,7 @@ import { readProgramData } from "@/lib/programs/page-data";
 import {
   countActiveProgramsByCategory,
   countProgramsByRegions,
+  listClosedPrograms,
   listActivePrograms,
   type ProgramFilterInput
 } from "@/lib/programs/query-repository";
@@ -13,6 +14,7 @@ import { findRegionByCode, regionRows } from "@/lib/regions";
 
 export const revalidate = 3600;
 const PROGRAMS_PAGE_LIMIT = 50;
+const PROGRAMS_CLOSED_PAGE_LIMIT = 30;
 const CATEGORY_FACET_LIMIT = 20;
 const MAX_KEYWORD_LENGTH = 40;
 
@@ -27,14 +29,14 @@ type ProgramsPageProps = {
 type ProgramFilters = ProgramFilterInput;
 
 export const metadata = {
-  title: "창업지원사업 공고",
-  description: "진행 중인 공고를 우선 보여주고, 마감된 창업지원사업도 삭제하지 않고 기록으로 유지합니다.",
+  title: "창업 공고",
+  description: "진행 중인 공고를 우선 보여주고, 마감된 공고도 삭제 없이 기록으로 남겨 과거 공고도 확인할 수 있습니다.",
   alternates: {
     canonical: "/programs"
   },
   openGraph: {
-    title: "창업지원사업 공고",
-    description: "창업지원사업, 정책자금, 보조금 공고를 검색하고 마감된 공고까지 확인할 수 있습니다.",
+    title: "창업 공고",
+    description: "창업 지원금, 보조금, 정책 공고를 신청 시기별로 확인하고, 마감 공고도 기록으로 조회할 수 있습니다.",
     locale: "ko_KR",
     type: "website"
   }
@@ -42,11 +44,13 @@ export const metadata = {
 
 export default async function ProgramsPage({ searchParams }: ProgramsPageProps) {
   const filters = await parseProgramFilters(searchParams);
-  const [programs, categoryFacets, regionFacets] = await Promise.all([
+  const [programs, closedPrograms, categoryFacets, regionFacets] = await Promise.all([
     readProgramData([], (db) => listActivePrograms(db, PROGRAMS_PAGE_LIMIT, filters)),
+    readProgramData([], (db) => listClosedPrograms(db, PROGRAMS_CLOSED_PAGE_LIMIT, filters)),
     readProgramData([], (db) => countActiveProgramsByCategory(db, CATEGORY_FACET_LIMIT)),
     readProgramData([], (db) => countProgramsByRegions(db, regionRows))
   ]);
+  const activePrograms = programs;
   const hasActiveFilters = Boolean(filters.keyword || filters.categoryCode || filters.region);
   const selectedRegionCode = filters.region?.code;
 
@@ -55,16 +59,16 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       <section className="mx-auto max-w-5xl px-4 py-12">
         <header className="rounded-lg border border-line bg-slate-50 p-6">
           <WalletCards className="text-signal" size={32} aria-hidden />
-          <h1 className="mt-4 text-3xl font-bold text-ink">창업지원사업 공고</h1>
+          <h1 className="mt-4 text-3xl font-bold text-ink">창업 공고</h1>
           <p className="mt-3 leading-7 text-slate-600">
-            진행 중인 창업지원사업을 먼저 보여주고, 신청이 끝난 공고도 마감 상태로 남겨 이전 공고 기록까지 확인할 수 있습니다.
+            진행 중인 창업지원사업을 우선 보여주고, 마감된 공고도 기록으로 남겨 과거 공고 내역까지 확인할 수 있습니다.
           </p>
         </header>
 
-        <section className="mt-6 border-y border-line py-5" aria-label="지원사업 검색과 필터">
+        <section className="mt-6 border-y border-line py-5" aria-label="공고 검색 필터">
           <SearchForm filters={filters} />
           <div className="mt-5">
-            <div className="mb-2 text-sm font-bold text-ink">분야</div>
+            <div className="mb-2 text-sm font-bold text-ink">카테고리</div>
             <div className="flex flex-wrap gap-2">
               <FilterLink label="전체" href={createProgramHref({ ...filters, categoryCode: undefined })} active={!filters.categoryCode} />
               {categoryFacets.map((facet) => (
@@ -96,24 +100,35 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
             </div>
           </div>
           <div className="mt-4 flex items-center justify-between gap-3 text-sm text-slate-600">
-            <span>{programs.length}개 공고 표시</span>
+            <span>{activePrograms.length + closedPrograms.length}개 공고</span>
             {hasActiveFilters ? (
               <Link href="/programs" className="font-semibold text-brand">
-                필터 초기화
+                전체 초기화
               </Link>
             ) : null}
           </div>
         </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {programs.length > 0 ? (
-            programs.map((program) => <ProgramCard key={program.id} program={program} />)
-          ) : (
-            <EmptyState
-              title="표시할 지원사업 공고가 없습니다"
-              description="검색어를 줄이거나 다른 분야, 지역 필터를 선택해 주세요."
-            />
-          )}
+        <div className="mt-6">
+          <section aria-label="진행 중 공고">
+            <h2 className="text-lg font-semibold text-ink">진행 중</h2>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              {activePrograms.length > 0 ? (
+                activePrograms.map((program) => <ProgramCard key={program.id} program={program} />)
+              ) : (
+                <EmptyState title="진행 중 공고 없음" description="현재 조건에 맞는 진행 중인 공고가 없습니다." />
+              )}
+            </div>
+          </section>
+
+          {closedPrograms.length > 0 ? (
+            <section className="mt-10" aria-label="마감 공고">
+              <h2 className="text-lg font-semibold text-ink">마감 기록</h2>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                {closedPrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
     </main>
@@ -156,14 +171,14 @@ function SearchForm({ filters }: { filters: ProgramFilters }) {
       {filters.categoryCode ? <input type="hidden" name="category" value={filters.categoryCode} /> : null}
       {filters.region ? <input type="hidden" name="region" value={filters.region.code} /> : null}
       <label className="sr-only" htmlFor="program-search">
-        지원사업 검색어
+        공고 검색
       </label>
       <input
         id="program-search"
         name="q"
         type="search"
         defaultValue={filters.keyword ?? ""}
-        placeholder="공고명, 기관명, 분야 검색"
+        placeholder="공고명, 기관명, 지역명 검색"
         className="min-h-11 flex-1 rounded-md border border-line px-3 text-sm outline-none focus:border-brand"
       />
       <button
@@ -181,9 +196,7 @@ function FilterLink({ label, href, active }: { label: string; href: string; acti
   return (
     <Link
       href={href}
-      className={`rounded-md border px-3 py-2 text-sm font-semibold ${
-        active ? "border-brand bg-brand text-white" : "border-line bg-white text-slate-700 hover:border-brand"
-      }`}
+      className={`rounded-md border px-3 py-2 text-sm font-semibold ${active ? "border-brand bg-brand text-white" : "border-line bg-white text-slate-700 hover:border-brand"}`}
     >
       {label}
     </Link>

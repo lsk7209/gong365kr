@@ -1,20 +1,27 @@
-# Status | 마지막: 2026-05-10
+﻿# Status | 마지막: 2026-05-11
 ## 현재 작업
-마감된 행사 처리 정책 구현 완료. 종료된 행사도 숨기지 않고 목록 하단, 상세, sitemap, RSS, AI 인덱스에 유지.
-## 최근 변경 (최근 5개만)
-- 05-10: 행사 상태 자동 갱신 추가 및 cron refresh-status에 행사 포함
-- 05-10: /events 목록에서 종료 행사도 하단 유지, 카드에 `행사 종료` 표시
-- 05-10: 이벤트 상세 JSON-LD를 EventScheduled/EventCompleted로 분기
-- 05-10: RSS/llms/ai-index 생성 자산에 종료 행사 유지 정책 반영
-- 05-10: Coinbase 디자인 기준 홈/공통 UI와 마감 공고 유지 정책 반영
+- 세션 종료 반영: 크론 응답 sourceInfo 공통화 작업은 여기까지 완료
+- 다음 세션에서는 운영 검증(`/sitemap.xml`, `/feed.xml`, `robots.txt`, `submit-search` 응답 로그)로 이어감
+
+## 최근 변경 (최근 5개)
+- 05-11: `/api/cron/submit-search` 응답에 `sourceInfo` 공통 빌더 적용
+- 05-11: `app/api/cron/sync` `sourceInfo`를 공통 포맷으로 전환
+- 05-11: `app/api/cron/sync-events` `sourceInfo`를 공통 포맷으로 전환
+- 05-11: `lib/search-submit.ts` `SearchSubmitSourceInfo` + `buildSearchSubmitSourceInfo` 추가
+- 05-11: `lib/search-submit.ts` `getSearchSubmitNextRetryAt` 추가
+
 ## TODO
-- [ ] Vercel 배포 완료 후 실제 도메인에서 /events 종료 행사 표시 확인
-- [ ] GSC/GA4/AdSense 실데이터 기반 2차 개선
-- [ ] 지역/체크 페이지 디자인 후속 정리
+- [ ] 배포 후 실제 `/sitemap.xml`, `/feed.xml`, `robots.txt`, `submit-search` 응답 로그 점검
+- [ ] GA4/GSC/IndexNow 인증 값 존재 여부 검증 (service account, INDEXNOW_KEY)
+- [ ] 계획/메뉴 상세 페이지 콘텐츠 가독성/상태 배지/CTA 배치 최종 디자인 리뷰
+
 ## 결정사항
-- 마감 행사는 SEO와 참고성을 위해 URL 유지, 목록에서는 진행/예정 행사 우선 노출
-- 행사 종료 기준은 이벤트 종료일 다음 날부터 적용
-- 별도 행사 보관함은 만들지 않고 기본 목록 하단에 유지
+- 오픈/마감 섹션 정책은 삭제 없이 보관 노출 유지로 유지
+- WordPress 플러그인 의존 최적화는 현재 Next.js 스택에서는 코드 경로 우선으로 접근
+
 ## 주의
-- 로컬 DB/env 미설정 시 목록 데이터가 0건으로 보일 수 있음
-- 배포는 GitHub push 후 Vercel 자동 배포에 의존
+- `.env`에 `GSC_SERVICE_ACCOUNT_JSON` 또는 `GSC_CLIENT_EMAIL`/`GSC_PRIVATE_KEY`가 없으면 인덱싱 자동 제출이 실패할 수 있음
+- `INDEXNOW_KEY` 없으면 네이버 제안 제출이 자동 스킵됨
+
+## 실수 기록
+- 없음

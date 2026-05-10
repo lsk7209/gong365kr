@@ -1,15 +1,15 @@
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { ProgramCard } from "@/app/_components/program-card";
 import { getProgramCategory, type ProgramListItem } from "@/lib/programs/display";
 import { findRegionsForProgram, regionRows } from "@/lib/regions";
 import { readProgramData } from "@/lib/programs/page-data";
-import { listRelatedPrograms } from "@/lib/programs/query-repository";
+import { listActiveRelatedPrograms } from "@/lib/programs/query-repository";
+import { TrackableLink } from "@/app/_components/trackable-link";
 
 const RELATED_PROGRAM_LIMIT = 3;
 
 export async function RelatedProgramList({ program }: { program: ProgramListItem }) {
-  const programs = await readProgramData([], (db) => listRelatedPrograms(db, program, RELATED_PROGRAM_LIMIT));
+  const programs = await readProgramData([], (db) => listActiveRelatedPrograms(db, program, RELATED_PROGRAM_LIMIT, new Date()));
   const titleRegions = [...findRegionsForProgram(program), ...extractRegionMatchesFromTitle(program.title)];
   const fallbackRegions = extractRegionsFromPrograms(programs);
   const relatedRegions = dedupeRegions(titleRegions.length > 0 ? titleRegions : fallbackRegions).slice(0, 2);
@@ -38,14 +38,16 @@ export async function RelatedProgramList({ program }: { program: ProgramListItem
         <h2 className="text-xl font-bold text-ink">관련 지원사업</h2>
         <div className="flex flex-wrap gap-3">
           {relatedLinks.map((link) => (
-            <Link
+            <TrackableLink
               key={link.href}
               href={link.href}
               className="inline-flex items-center gap-1 text-sm font-semibold text-brand"
+              label={`related-${link.href}`}
+              eventParams={{ component: "related-program-list" }}
             >
               {link.label}
               <ArrowRight size={16} aria-hidden />
-            </Link>
+            </TrackableLink>
           ))}
         </div>
       </div>

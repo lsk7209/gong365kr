@@ -3,10 +3,17 @@ import Link from "next/link";
 import { EmptyState } from "@/app/_components/empty-state";
 import { EventCard } from "@/app/_components/event-card";
 import { readEventData } from "@/lib/events/page-data";
-import { listEventAreas, listEventTypes, listUpcomingEvents, type EventFacet } from "@/lib/events/query-repository";
+import {
+  listClosedEvents,
+  listEventAreas,
+  listEventTypes,
+  listOpenEvents,
+  type EventFacet
+} from "@/lib/events/query-repository";
 
 export const revalidate = 3600;
 const EVENTS_PAGE_LIMIT = 50;
+const EVENTS_CLOSED_PAGE_LIMIT = 30;
 const ALL_FILTER_VALUE = "all";
 const MAX_KEYWORD_LENGTH = 40;
 
@@ -25,14 +32,14 @@ type EventFilters = {
 };
 
 export const metadata = {
-  title: "창업 이벤트 정보",
-  description: "진행 예정 행사와 종료된 창업 이벤트 기록을 함께 확인할 수 있습니다.",
+  title: "행사 공지",
+  description: "국민·지자체·교육기관 주최 행사 공고와 지원 프로그램을 한 곳에서 확인할 수 있습니다.",
   alternates: {
     canonical: "/events"
   },
   openGraph: {
-    title: "창업 이벤트 정보",
-    description: "교육, 행사, 전시, 사업설명회 정보를 일정순으로 정리하고 종료된 행사도 기록으로 유지합니다.",
+    title: "행사 공지",
+    description: "주요 행사를 일자, 지역, 유형별로 분류해서 확인하고 신청 마감 여부를 즉시 파악할 수 있습니다.",
     locale: "ko_KR",
     type: "website"
   }
@@ -40,11 +47,13 @@ export const metadata = {
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
   const filters = await parseEventFilters(searchParams);
-  const [events, areaFacets, typeFacets] = await Promise.all([
-    readEventData([], (db) => listUpcomingEvents(db, EVENTS_PAGE_LIMIT, new Date(), filters)),
+  const [events, closedEvents, areaFacets, typeFacets] = await Promise.all([
+    readEventData([], (db) => listOpenEvents(db, EVENTS_PAGE_LIMIT, filters, new Date())),
+    readEventData([], (db) => listClosedEvents(db, EVENTS_CLOSED_PAGE_LIMIT, new Date(), filters)),
     readEventData([], (db) => listEventAreas(db)),
     readEventData([], (db) => listEventTypes(db))
   ]);
+  const activeEvents = events;
   const hasActiveFilters = Boolean(filters.areaName || filters.eventType || filters.keyword);
 
   return (
@@ -52,14 +61,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       <section className="mx-auto max-w-5xl px-4 py-12">
         <header className="rounded-lg border border-line bg-slate-50 p-6">
           <CalendarDays className="text-signal" size={32} aria-hidden />
-          <h1 className="mt-4 text-3xl font-semibold text-ink">창업 이벤트 정보</h1>
+          <h1 className="mt-4 text-3xl font-semibold text-ink">행사 공지</h1>
           <p className="mt-3 leading-7 text-slate-600">
-            기업마당과 공공기관에서 제공하는 교육, 행사, 전시, 사업설명회 정보를 일정순으로 정리했습니다.
-            종료된 행사도 숨기지 않고 하단에 기록으로 유지합니다.
+            행사 일정과 공고를 지역, 유형별로 찾아볼 수 있으며, 마감된 행사도 기록으로 남겨 과거 이력을 확인할 수 있습니다.
           </p>
         </header>
 
-        <section className="mt-6 border-y border-line py-5" aria-label="이벤트 검색과 필터">
+        <section className="mt-6 border-y border-line py-5" aria-label="행사 검색 필터">
           <SearchForm filters={filters} />
           <div className="mt-5 flex flex-col gap-4">
             <FilterGroup
@@ -78,24 +86,35 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             />
           </div>
           <div className="mt-4 flex items-center justify-between gap-3 text-sm text-slate-600">
-            <span>{events.length}개 이벤트 표시</span>
+            <span>{activeEvents.length + closedEvents.length}건의 행사</span>
             {hasActiveFilters ? (
               <Link href="/events" className="font-semibold text-brand">
-                필터 초기화
+                전체 초기화
               </Link>
             ) : null}
           </div>
         </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {events.length > 0 ? (
-            events.map((event) => <EventCard key={event.id} event={event} />)
-          ) : (
-            <EmptyState
-              title="표시할 이벤트가 없습니다"
-              description="검색어를 줄이거나 다른 지역, 유형 필터를 선택해 주세요."
-            />
-          )}
+        <div className="mt-6">
+          <section aria-label="진행 중 행사">
+            <h2 className="text-lg font-semibold text-ink">진행 중</h2>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              {activeEvents.length > 0 ? (
+                activeEvents.map((event) => <EventCard key={event.id} event={event} />)
+              ) : (
+                <EmptyState title="진행 중 행사 없음" description="현재 조건에 맞는 진행 중 행사가 없습니다." />
+              )}
+            </div>
+          </section>
+
+          {closedEvents.length > 0 ? (
+            <section className="mt-10" aria-label="마감 행사">
+              <h2 className="text-lg font-semibold text-ink">마감 기록</h2>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                {closedEvents.map((event) => <EventCard key={event.id} event={event} />)}
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
     </main>
@@ -132,14 +151,14 @@ function SearchForm({ filters }: { filters: EventFilters }) {
       {filters.areaName ? <input type="hidden" name="area" value={filters.areaName} /> : null}
       {filters.eventType ? <input type="hidden" name="type" value={filters.eventType} /> : null}
       <label className="sr-only" htmlFor="event-search">
-        이벤트 검색어
+        행사 검색
       </label>
       <input
         id="event-search"
         name="q"
         type="search"
         defaultValue={filters.keyword ?? ""}
-        placeholder="이벤트명, 기관명, 지역 검색"
+        placeholder="행사명, 지역, 유형 검색"
         className="min-h-11 flex-1 rounded-md border border-line px-3 text-sm outline-none focus:border-brand"
       />
       <button

@@ -1,5 +1,4 @@
 import { ArrowRight, CalendarClock, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
 import {
   formatDate,
   formatDeadline,
@@ -9,6 +8,8 @@ import {
   isProgramClosed,
   type ProgramListItem
 } from "@/lib/programs/display";
+import { TrackableAnchor } from "@/app/_components/trackable-anchor";
+import { TrackableLink } from "@/app/_components/trackable-link";
 
 type ProgramCardProps = {
   program: ProgramListItem;
@@ -17,6 +18,7 @@ type ProgramCardProps = {
 export function ProgramCard({ program }: ProgramCardProps) {
   const detailHref = `/programs/${program.slug}`;
   const closed = isProgramClosed(program);
+  const canApply = !closed;
   const deadlineClassName = closed
     ? "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-slate-500"
     : "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-signal";
@@ -33,9 +35,14 @@ export function ProgramCard({ program }: ProgramCardProps) {
         </span>
       </div>
       <h2 className="text-lg font-bold leading-7 text-ink">
-        <Link href={detailHref} className="hover:text-brand">
+        <TrackableLink
+          href={detailHref}
+          className="hover:text-brand"
+          label={`${program.slug}-title`}
+          eventParams={{ content_type: "program", content_id: program.id }}
+        >
           {program.title}
-        </Link>
+        </TrackableLink>
       </h2>
       <p className="mt-3 text-sm leading-6 text-slate-600">{getProgramSummary(program)}</p>
       <div className="mt-4 flex items-center gap-2 text-sm text-slate-700">
@@ -43,12 +50,31 @@ export function ProgramCard({ program }: ProgramCardProps) {
         <span>{getProgramAgency(program)}</span>
       </div>
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 text-sm">
-        <span className="text-slate-500">신청 마감 {formatDate(program.applicationEnd)}</span>
-        <Link href={detailHref} className="inline-flex items-center gap-1 font-semibold text-brand">
-          상세보기
+        <span className="text-slate-500">마감일 {formatDate(program.applicationEnd)}</span>
+        <TrackableLink
+          href={detailHref}
+          className="inline-flex items-center gap-1 font-semibold text-brand"
+          label={`${program.slug}-detail`}
+          eventParams={{ content_type: "program", content_id: program.id, action: "open_detail" }}
+        >
+          자세히 보기
           <ArrowRight size={15} aria-hidden />
-        </Link>
+        </TrackableLink>
       </div>
+      {canApply ? (
+        <TrackableAnchor
+          href={program.rawUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 block text-sm font-semibold text-brand"
+          label={`${program.slug}-external`}
+          eventParams={{ content_type: "program", content_id: program.id, action: "open_external" }}
+        >
+          공고 바로가기
+        </TrackableAnchor>
+      ) : (
+        <span className="mt-4 block text-sm text-slate-400">마감된 공고(기록 조회)</span>
+      )}
     </article>
   );
 }

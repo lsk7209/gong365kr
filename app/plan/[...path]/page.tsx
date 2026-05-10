@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 import { getSeoulDate } from "@/lib/time/seoul";
+import { readEventData } from "@/lib/events/page-data";
+import { getEventBySlug } from "@/lib/events/query-repository";
+import { readProgramData } from "@/lib/programs/page-data";
+import { getProgramBySlug } from "@/lib/programs/query-repository";
+import { findRegionByCode } from "@/lib/regions";
 
-type SearchParams = {
+export type SearchParams = {
   [key: string]: string | string[] | undefined;
 };
 
@@ -39,7 +44,7 @@ export default async function PlanCompatPage({ params, searchParams }: PlanCompa
     .filter((segment) => segment.length > 0);
 
   if (normalizedSegments.length === 0) {
-    redirect("/programs");
+    redirect(appendSearchParams("/programs", query));
   }
 
   const normalizedFullPath = normalizedSegments.join("/");
@@ -78,7 +83,30 @@ export default async function PlanCompatPage({ params, searchParams }: PlanCompa
     redirect(appendSearchParams(`/${normalizedPath}`, query));
   }
 
-  redirect(appendSearchParams(`/programs/${encodeURIComponent(normalizedSegments[normalizedSegments.length - 1])}`, query));
+  const fallbackSlug = normalizedSegments[normalizedSegments.length - 1];
+  if (!fallbackSlug) {
+    redirect(appendSearchParams("/programs", query));
+  }
+
+  const [programMatch, eventMatch] = await Promise.all([
+    readProgramData(null, (db) => getProgramBySlug(db, fallbackSlug)),
+    readEventData(null, (db) => getEventBySlug(db, fallbackSlug))
+  ]);
+
+  if (programMatch) {
+    redirect(appendSearchParams(`/programs/${programMatch.slug}`, query));
+  }
+
+  if (eventMatch) {
+    redirect(appendSearchParams(`/events/${eventMatch.slug}`, query));
+  }
+
+  const regionMatch = findRegionByCode(firstSegment);
+  if (regionMatch) {
+    redirect(appendSearchParams(`/regions/${regionMatch.code}`, query));
+  }
+
+  redirect(appendSearchParams("/programs", query));
 }
 
 function normalizeSegment(raw: string) {

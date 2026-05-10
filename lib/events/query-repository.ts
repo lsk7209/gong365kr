@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNotNull, like, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, like, not, or, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { events } from "@/db/schema";
 import type { EventListItem } from "./display";
@@ -22,20 +22,60 @@ export async function listUpcomingEvents(
   now = new Date(),
   filters: EventFilterInput = {}
 ): Promise<EventListItem[]> {
+  return listOpenEvents(db, limit, filters, now);
+}
+
+export async function listOpenEvents(
+  db: DbClient,
+  limit: number,
+  filters: EventFilterInput = {},
+  now = new Date()
+): Promise<EventListItem[]> {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+
   return db
     .select(eventListFields)
     .from(events)
-    .where(eventFilterCondition(filters))
+    .where(and(eventFilterCondition(filters), not(isEventClosedCondition(nowSeconds))))
     .orderBy(
-      eventClosedSort(now),
       asc(sql`coalesce(${events.eventStart}, ${events.receptionEnd}, ${events.eventEnd}, ${events.lastSyncedAt})`),
       desc(events.lastSyncedAt)
     )
     .limit(limit);
 }
 
-export async function listRecentEvents(db: DbClient, limit: number): Promise<EventListItem[]> {
-  return db.select(eventListFields).from(events).orderBy(desc(events.lastSyncedAt)).limit(limit);
+export async function listClosedEvents(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+  filters: EventFilterInput = {}
+): Promise<EventListItem[]> {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+
+  return db
+    .select(eventListFields)
+    .from(events)
+    .where(and(eventFilterCondition(filters), isEventClosedCondition(nowSeconds)))
+    .orderBy(
+      asc(sql`coalesce(${events.eventEnd}, ${events.eventStart}, ${events.lastSyncedAt})`),
+      desc(events.lastSyncedAt)
+    )
+    .limit(limit);
+}
+
+export async function listRecentEvents(
+  db: DbClient,
+  limit: number,
+  now = new Date()
+): Promise<EventListItem[]> {
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+
+  return db
+    .select(eventListFields)
+    .from(events)
+    .where(not(isEventClosedCondition(nowSeconds)))
+    .orderBy(desc(events.lastSyncedAt))
+    .limit(limit);
 }
 
 export async function getEventBySlug(db: DbClient, slug: string): Promise<EventListItem | null> {
@@ -144,12 +184,9 @@ function eventKeywordCondition(keyword: string) {
   );
 }
 
-function eventClosedSort(now: Date) {
-  const nowSeconds = Math.floor(now.getTime() / 1000);
-
-  return sql`case
-    when ${events.status} = 'closed' then 1
-    when ${events.eventEnd} is not null and (${events.eventEnd} + 86399) < ${nowSeconds} then 1
-    else 0
-  end`;
+function isEventClosedCondition(nowSeconds: number) {
+  return or(
+    sql`${events.status} = 'closed'`,
+    and(isNotNull(events.eventEnd), sql`${events.eventEnd} + 86399 < ${nowSeconds}`)
+  );
 }

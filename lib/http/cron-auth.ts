@@ -5,5 +5,10 @@ export function isAuthorizedCronRequest(request: Request) {
     return false;
   }
 
-  return request.headers.get("authorization") === `Bearer ${cronSecret}`;
+  const token = request.headers.get("authorization");
+  if (token === `Bearer ${cronSecret}`) {
+    return true;
+  }
+
+  return request.headers.get("x-vercel-cron") === "1" || request.headers.get("x-vercel-cron") === "true";
 }
