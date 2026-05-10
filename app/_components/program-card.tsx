@@ -1,4 +1,4 @@
-import { CalendarClock, CheckCircle2, ExternalLink } from "lucide-react";
+import { ArrowRight, CalendarClock, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import {
   formatDate,
@@ -14,6 +14,8 @@ type ProgramCardProps = {
 };
 
 export function ProgramCard({ program }: ProgramCardProps) {
+  const detailHref = `/programs/${program.slug}`;
+
   return (
     <article className="rounded-lg border border-line bg-white p-5 shadow-panel">
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -26,7 +28,7 @@ export function ProgramCard({ program }: ProgramCardProps) {
         </span>
       </div>
       <h2 className="text-lg font-bold leading-7 text-ink">
-        <Link href={`/programs/${program.slug}`} className="hover:text-brand">
+        <Link href={detailHref} className="hover:text-brand">
           {program.title}
         </Link>
       </h2>
@@ -37,15 +39,10 @@ export function ProgramCard({ program }: ProgramCardProps) {
       </div>
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 text-sm">
         <span className="text-slate-500">마감 {formatDate(program.applicationEnd)}</span>
-        <a
-          href={program.rawUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 font-semibold text-brand"
-        >
-          원공고
-          <ExternalLink size={15} aria-hidden />
-        </a>
+        <Link href={detailHref} className="inline-flex items-center gap-1 font-semibold text-brand">
+          상세보기
+          <ArrowRight size={15} aria-hidden />
+        </Link>
       </div>
     </article>
   );
