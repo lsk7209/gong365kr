@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: ProgramDetailPageProps) {
 
   return {
     title: `${program.title} | ${getSiteName()}`,
-    description: description.slice(0, 120),
+    description: description.slice(0, 80),
     alternates: {
       canonical: `/programs/${program.slug}`
     },
@@ -76,6 +76,7 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
     <main className="min-h-screen bg-white">
       <article className="mx-auto max-w-4xl px-4 py-12">
         <ProgramJsonLd program={program} />
+        <FaqPageJsonLd program={program} />
         <GaContentComplete contentType="program" title={program.title} id={program.slug} />
 
         <TrackableLink href="/programs" className="text-sm font-semibold text-brand" label="program-back">
@@ -224,17 +225,7 @@ function ProgramJsonLd({ program }: { program: ProgramListItem }) {
     articleSection: getProgramCategory(program),
     datePublished: publishedAt,
     dateModified: updatedAt,
-    mainEntityOfPage: {
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "?좎껌 留덇컧?쇱씠 吏?щ뒗??媛?ν븳媛??",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "留덇컧?쇱씠 吏???꾩뿉??湲곌? ?덈궡???곕씪 ?묒닔媛 ?쒗븳?????덉뒿?덈떎."
-          }
-        },
+    mainEntityOfPage: { "@type": "WebPage", "@id": pageUrl },
         {
           "@type": "Question",
           name: "?꾩슂???쒖텧 ?쒕쪟???대뵒???뺤씤?",
@@ -250,3 +241,28 @@ function ProgramJsonLd({ program }: { program: ProgramListItem }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />;
 }
 
+function FaqPageJsonLd({ program }: { program: ProgramListItem }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `${program.title} 신청 마감일이 지났으면 어떻게 되나요?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "마감일이 지난 경우 일반적으로 신청이 불가합니다. 추가 모집이나 재공고가 있을 수 있으니 담당기관에 문의하세요."
+        }
+      },
+      {
+        "@type": "Question",
+        name: `${program.title} 신청 서류는 어디서 확인하나요?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "공고 본문 및 담당기관 홈페이지에서 확인하실 수 있습니다. 공고 바로가기 버튼을 통해 공식 안내 페이지로 이동하세요."
+        }
+      }
+    ]
+  };
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />;
+}

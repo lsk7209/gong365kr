@@ -4,7 +4,7 @@ const nextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["@napi-rs/canvas", "pdf-parse", "pdfjs-dist"],
   experimental: {
-    optimizePackageImports: ["lucide-react"]
+    optimizePackageImports: ["lucide-react", "date-fns"]
   },
   images: {
     formats: ["image/avif", "image/webp"]
