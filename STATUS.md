@@ -1,27 +1,28 @@
-﻿# Status | 마지막: 2026-05-11
+# Status | 마지막: 2026-05-11
 ## 현재 작업
-- 세션 종료 반영: 크론 응답 sourceInfo 공통화 작업은 여기까지 완료
-- 다음 세션에서는 운영 검증(`/sitemap.xml`, `/feed.xml`, `robots.txt`, `submit-search` 응답 로그)로 이어감
+- site-optimizer T2 전체 적용 완료 → Vercel 배포 트리거됨
+- G-01(Microsoft Clarity) 선택 항목만 미적용 (Clarity ID 필요)
 
 ## 최근 변경 (최근 5개)
-- 05-11: `/api/cron/submit-search` 응답에 `sourceInfo` 공통 빌더 적용
-- 05-11: `app/api/cron/sync` `sourceInfo`를 공통 포맷으로 전환
-- 05-11: `app/api/cron/sync-events` `sourceInfo`를 공통 포맷으로 전환
-- 05-11: `lib/search-submit.ts` `SearchSubmitSourceInfo` + `buildSearchSubmitSourceInfo` 추가
-- 05-11: `lib/search-submit.ts` `getSearchSubmitNextRetryAt` 추가
+- 05-11: site-optimizer T2 일괄 적용 (A-01/A-02/B-01/B-02/B-03/C-02)
+- 05-11: GA4 추적 인프라 + Trackable 컴포넌트 적용
+- 05-11: `/api/cron/submit-search` 검색엔진 자동 색인 제출 파이프라인
+- 05-11: `app/api/cron/sync` `sourceInfo` 공통 포맷 전환
+- 05-11: `lib/search-submit.ts` SearchSubmitSourceInfo 공통 빌더 추가
 
 ## TODO
-- [ ] 배포 후 실제 `/sitemap.xml`, `/feed.xml`, `robots.txt`, `submit-search` 응답 로그 점검
-- [ ] GA4/GSC/IndexNow 인증 값 존재 여부 검증 (service account, INDEXNOW_KEY)
-- [ ] 계획/메뉴 상세 페이지 콘텐츠 가독성/상태 배지/CTA 배치 최종 디자인 리뷰
+- [ ] Vercel 배포 확인 후 `/sitemap.xml`, `/feed.xml`, `robots.txt` 점검
+- [ ] `/api/cron/submit-search` 수동 호출 → 응답 JSON 확인
+- [ ] GA4/GSC/IndexNow 환경변수 존재 여부 검증
+- [ ] G-01: Microsoft Clarity 설치 (Clarity 프로젝트 ID 확보 후)
+- [ ] 상세 페이지 디자인 리뷰 (plan/programs/events/regions)
 
 ## 결정사항
-- 오픈/마감 섹션 정책은 삭제 없이 보관 노출 유지로 유지
-- WordPress 플러그인 의존 최적화는 현재 Next.js 스택에서는 코드 경로 우선으로 접근
+- meta_priority: naver → description 80자 적용 (B-03)
+- OG 이미지 PNG 직접 생성 (@napi-rs/canvas), SVG 파일은 유지
+- FAQPage JSON-LD Article에서 독립 분리 → 구글 리치결과 인식
 
 ## 주의
-- `.env`에 `GSC_SERVICE_ACCOUNT_JSON` 또는 `GSC_CLIENT_EMAIL`/`GSC_PRIVATE_KEY`가 없으면 인덱싱 자동 제출이 실패할 수 있음
-- `INDEXNOW_KEY` 없으면 네이버 제안 제출이 자동 스킵됨
-
-## 실수 기록
-- 없음
+- `GSC_SERVICE_ACCOUNT_JSON` 또는 `GSC_CLIENT_EMAIL`/`GSC_PRIVATE_KEY` 없으면 인덱싱 제출 실패
+- `INDEXNOW_KEY` 없으면 네이버 제출 스킵
+- llms.txt "0건 샘플" → 크론 sync 실행 후 자동 해소 (T1)
