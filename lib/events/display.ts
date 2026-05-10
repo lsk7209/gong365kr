@@ -1,9 +1,9 @@
 import type { EventStatus } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_SUMMARY = "행사 상세 내용은 기업마당 또는 출처 페이지에서 확인할 수 있습니다.";
-const DEFAULT_ORG = "출처기관 확인 필요";
-const DEFAULT_TYPE = "행사";
+const DEFAULT_SUMMARY = "이벤트 상세 내용은 기업마당 또는 출처 페이지에서 확인할 수 있습니다.";
+const DEFAULT_ORG = "출처 기관 확인 필요";
+const DEFAULT_TYPE = "이벤트";
 const DEFAULT_AREA = "전국";
 
 export type EventListItem = {

@@ -28,9 +28,15 @@ type ProgramFilters = ProgramFilterInput;
 
 export const metadata = {
   title: "창업지원사업 공고",
-  description: "마감 전 창업지원사업, 정책자금, 보조금 공고를 검색하고 확인할 수 있습니다.",
+  description: "진행 중인 공고를 우선 보여주고, 마감된 창업지원사업도 삭제하지 않고 기록으로 유지합니다.",
   alternates: {
     canonical: "/programs"
+  },
+  openGraph: {
+    title: "창업지원사업 공고",
+    description: "창업지원사업, 정책자금, 보조금 공고를 검색하고 마감된 공고까지 확인할 수 있습니다.",
+    locale: "ko_KR",
+    type: "website"
   }
 };
 
@@ -47,15 +53,15 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
   return (
     <main className="min-h-screen bg-white">
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <div className="rounded-lg border border-line bg-slate-50 p-6">
+        <header className="rounded-lg border border-line bg-slate-50 p-6">
           <WalletCards className="text-signal" size={32} aria-hidden />
           <h1 className="mt-4 text-3xl font-bold text-ink">창업지원사업 공고</h1>
           <p className="mt-3 leading-7 text-slate-600">
-            마감 전 창업지원사업과 정책자금 공고를 마감일 순서로 정리했습니다.
+            진행 중인 창업지원사업을 먼저 보여주고, 신청이 끝난 공고도 마감 상태로 남겨 이전 공고 기록까지 확인할 수 있습니다.
           </p>
-        </div>
+        </header>
 
-        <section className="mt-6 border-y border-line py-5">
+        <section className="mt-6 border-y border-line py-5" aria-label="지원사업 검색과 필터">
           <SearchForm filters={filters} />
           <div className="mt-5">
             <div className="mb-2 text-sm font-bold text-ink">분야</div>
@@ -103,7 +109,10 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
           {programs.length > 0 ? (
             programs.map((program) => <ProgramCard key={program.id} program={program} />)
           ) : (
-            <EmptyState title="표시할 지원사업 공고가 없습니다" description="검색어를 줄이거나 다른 분야를 선택해 주세요." />
+            <EmptyState
+              title="표시할 지원사업 공고가 없습니다"
+              description="검색어를 줄이거나 다른 분야, 지역 필터를 선택해 주세요."
+            />
           )}
         </div>
       </section>

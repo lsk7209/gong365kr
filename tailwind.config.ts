@@ -10,13 +10,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#111827",
-        line: "#d7dde8",
-        brand: "#0f766e",
-        signal: "#b45309"
+        ink: "#0a0b0d",
+        line: "#dee1e6",
+        brand: "#0052ff",
+        signal: "#05b169"
       },
       boxShadow: {
-        panel: "0 1px 2px rgb(15 23 42 / 0.08)"
+        panel: "0 4px 12px rgb(0 0 0 / 0.04)"
       }
     }
   },

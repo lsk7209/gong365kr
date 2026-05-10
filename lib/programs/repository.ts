@@ -64,7 +64,7 @@ export async function refreshProgramStatuses(db: DbClient, now = new Date()) {
       status: "closed",
       lastSyncedAt: now
     })
-    .where(sql`${programs.applicationEnd} is not null and ${programs.applicationEnd} < ${nowSeconds}`);
+    .where(sql`${programs.applicationEnd} is not null and (${programs.applicationEnd} + 86399) < ${nowSeconds}`);
 
   const upcoming = await db
     .update(programs)
@@ -82,7 +82,7 @@ export async function refreshProgramStatuses(db: DbClient, now = new Date()) {
     })
     .where(
       sql`(${programs.applicationStart} is null or ${programs.applicationStart} <= ${nowSeconds})
-        and (${programs.applicationEnd} is null or ${programs.applicationEnd} >= ${nowSeconds})`
+        and (${programs.applicationEnd} is null or (${programs.applicationEnd} + 86399) >= ${nowSeconds})`
     );
 
   return {

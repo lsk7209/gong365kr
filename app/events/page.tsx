@@ -25,10 +25,16 @@ type EventFilters = {
 };
 
 export const metadata = {
-  title: "창업 행사정보",
-  description: "중소기업과 창업자가 참여할 수 있는 교육, 세미나, 전시회 행사정보를 모았습니다.",
+  title: "창업 이벤트 정보",
+  description: "중소기업과 창업자가 참여할 수 있는 교육, 행사, 전시, 사업설명회 정보를 모아 정리합니다.",
   alternates: {
     canonical: "/events"
+  },
+  openGraph: {
+    title: "창업 이벤트 정보",
+    description: "교육, 행사, 전시, 사업설명회 등 창업자가 확인할 만한 이벤트 정보를 모아 보여드립니다.",
+    locale: "ko_KR",
+    type: "website"
   }
 };
 
@@ -44,14 +50,15 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   return (
     <main className="min-h-screen bg-white">
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <div className="rounded-lg border border-line bg-slate-50 p-6">
+        <header className="rounded-lg border border-line bg-slate-50 p-6">
           <CalendarDays className="text-signal" size={32} aria-hidden />
-          <h1 className="mt-4 text-3xl font-bold text-ink">창업 행사정보</h1>
+          <h1 className="mt-4 text-3xl font-bold text-ink">창업 이벤트 정보</h1>
           <p className="mt-3 leading-7 text-slate-600">
-            기업마당에서 제공하는 교육, 세미나, 전시회, 사업설명회 정보를 행사일 순서로 정리했습니다.
+            기업마당과 공공기관에서 제공하는 교육, 행사, 전시, 사업설명회 정보를 일정순으로 정리했습니다.
           </p>
-        </div>
-        <section className="mt-6 border-y border-line py-5">
+        </header>
+
+        <section className="mt-6 border-y border-line py-5" aria-label="이벤트 검색과 필터">
           <SearchForm filters={filters} />
           <div className="mt-5 flex flex-col gap-4">
             <FilterGroup
@@ -70,7 +77,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             />
           </div>
           <div className="mt-4 flex items-center justify-between gap-3 text-sm text-slate-600">
-            <span>{events.length}개 행사 표시</span>
+            <span>{events.length}개 이벤트 표시</span>
             {hasActiveFilters ? (
               <Link href="/events" className="font-semibold text-brand">
                 필터 초기화
@@ -78,11 +85,15 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             ) : null}
           </div>
         </section>
+
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {events.length > 0 ? (
             events.map((event) => <EventCard key={event.id} event={event} />)
           ) : (
-            <EmptyState title="표시할 행사정보가 없습니다" description="검색어를 줄이거나 다른 지역·유형을 선택해 주세요." />
+            <EmptyState
+              title="표시할 이벤트가 없습니다"
+              description="검색어를 줄이거나 다른 지역, 유형 필터를 선택해 주세요."
+            />
           )}
         </div>
       </section>
@@ -120,14 +131,14 @@ function SearchForm({ filters }: { filters: EventFilters }) {
       {filters.areaName ? <input type="hidden" name="area" value={filters.areaName} /> : null}
       {filters.eventType ? <input type="hidden" name="type" value={filters.eventType} /> : null}
       <label className="sr-only" htmlFor="event-search">
-        행사 검색어
+        이벤트 검색어
       </label>
       <input
         id="event-search"
         name="q"
         type="search"
         defaultValue={filters.keyword ?? ""}
-        placeholder="행사명, 기관명, 지역 검색"
+        placeholder="이벤트명, 기관명, 지역 검색"
         className="min-h-11 flex-1 rounded-md border border-line px-3 text-sm outline-none focus:border-brand"
       />
       <button

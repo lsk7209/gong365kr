@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, like, lt, ne, or, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { programs } from "@/db/schema";
-import type { RegionRow } from "@/lib/regions";
+import { findRegionsForProgram, type RegionRow } from "@/lib/regions";
 import { PROGRAM_CATEGORY_LABELS, type ProgramListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
@@ -26,7 +26,13 @@ export async function listClosingPrograms(db: DbClient, limit: number, now = new
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(validProgramCondition(), gte(programs.applicationEnd, now), sql`${programs.status} <> 'closed'`))
+    .where(
+      and(
+        validProgramCondition(),
+        sql`${programs.applicationEnd} is not null and (${programs.applicationEnd} + 86399) >= ${Math.floor(now.getTime() / 1000)}`,
+        sql`${programs.status} <> 'closed'`
+      )
+    )
     .orderBy(asc(programs.applicationEnd))
     .limit(limit);
 }
@@ -39,8 +45,8 @@ export async function listActivePrograms(
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(validProgramCondition(), sql`${programs.status} <> 'closed'`, programFilterCondition(filters)))
-    .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
+    .where(and(validProgramCondition(), programFilterCondition(filters)))
+    .orderBy(programClosedSort(), asc(programs.applicationEnd), desc(programs.lastSyncedAt))
     .limit(limit);
 }
 
@@ -57,7 +63,7 @@ export async function listProgramsByDeadlineMonth(
     .select(programListFields)
     .from(programs)
     .where(and(validProgramCondition(), gte(programs.applicationEnd, start), lt(programs.applicationEnd, end)))
-    .orderBy(asc(programs.applicationEnd))
+    .orderBy(programClosedSort(), asc(programs.applicationEnd))
     .limit(limit);
 }
 
@@ -69,18 +75,13 @@ export async function listProgramsByRegion(
   return db
     .select(programListFields)
     .from(programs)
-    .where(and(validProgramCondition(), regionKeywordCondition(region.keywords), sql`${programs.status} <> 'closed'`))
-    .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
+    .where(and(validProgramCondition(), regionKeywordCondition(region.keywords)))
+    .orderBy(programClosedSort(), asc(programs.applicationEnd), desc(programs.lastSyncedAt))
     .limit(limit);
 }
 
 export async function listRecentProgramsForFeed(db: DbClient, limit: number): Promise<ProgramListItem[]> {
-  return db
-    .select(programListFields)
-    .from(programs)
-    .where(and(validProgramCondition(), sql`${programs.status} <> 'closed'`))
-    .orderBy(desc(programs.lastSyncedAt))
-    .limit(limit);
+  return db.select(programListFields).from(programs).where(validProgramCondition()).orderBy(desc(programs.lastSyncedAt)).limit(limit);
 }
 
 export async function getProgramBySlug(db: DbClient, slug: string): Promise<ProgramListItem | null> {
@@ -104,22 +105,21 @@ export async function listRelatedPrograms(
     program.executor ? eq(programs.executor, program.executor) : undefined
   ].filter(Boolean);
 
-  if (relatedConditions.length === 0) {
+  const regionConditions = findRegionsForProgram(program).map((region) => regionKeywordCondition(region.keywords));
+
+  if (relatedConditions.length === 0 && regionConditions.length === 0) {
     return [];
+  }
+
+  if (regionConditions.length > 0) {
+    relatedConditions.push(or(...regionConditions));
   }
 
   return db
     .select(programListFields)
     .from(programs)
-    .where(
-      and(
-        validProgramCondition(),
-        sql`${programs.status} <> 'closed'`,
-        ne(programs.id, program.id),
-        or(...relatedConditions)
-      )
-    )
-    .orderBy(asc(programs.applicationEnd), desc(programs.lastSyncedAt))
+    .where(and(validProgramCondition(), ne(programs.id, program.id), or(...relatedConditions)))
+    .orderBy(programClosedSort(), asc(programs.applicationEnd), desc(programs.lastSyncedAt))
     .limit(limit);
 }
 
@@ -143,7 +143,7 @@ export async function countActiveProgramsByCategory(db: DbClient, limit: number)
       count: activeCount
     })
     .from(programs)
-    .where(and(validProgramCondition(), sql`${programs.status} <> 'closed'`, isNotNull(programs.categoryCode)))
+    .where(and(validProgramCondition(), isNotNull(programs.categoryCode)))
     .groupBy(programs.categoryCode)
     .orderBy(desc(activeCount))
     .limit(limit);
@@ -162,7 +162,7 @@ async function countProgramsByRegion(db: DbClient, region: RegionRow): Promise<R
   const [result] = await db
     .select({ count: count() })
     .from(programs)
-    .where(and(validProgramCondition(), regionKeywordCondition(region.keywords), sql`${programs.status} <> 'closed'`));
+    .where(and(validProgramCondition(), regionKeywordCondition(region.keywords)));
 
   return {
     code: region.code,
@@ -223,4 +223,14 @@ function programKeywordCondition(keyword: string) {
     like(programs.executor, pattern),
     like(programs.categoryCode, pattern)
   );
+}
+
+function programClosedSort() {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  return sql`case
+    when ${programs.status} = 'closed' then 1
+    when ${programs.applicationEnd} is not null and (${programs.applicationEnd} + 86399) < ${nowSeconds} then 1
+    else 0
+  end`;
 }

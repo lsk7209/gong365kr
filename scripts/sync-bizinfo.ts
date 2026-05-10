@@ -3,7 +3,7 @@ import { fetchBizinfoPrograms } from "@/lib/bizinfo/client";
 import { DEFAULT_BIZINFO_PAGE_UNIT } from "@/lib/bizinfo/constants";
 import { normalizeBizinfoItem } from "@/lib/bizinfo/normalize";
 import { getRequiredEnv } from "@/lib/env";
-import { upsertPrograms } from "@/lib/programs/repository";
+import { refreshProgramStatuses, upsertPrograms } from "@/lib/programs/repository";
 
 const DEFAULT_PAGE_INDEX = 1;
 
@@ -19,7 +19,9 @@ async function main() {
   const normalizedPrograms = fetchResult.items
     .map((item) => normalizeBizinfoItem(item, now))
     .filter((program) => program !== null);
-  const result = await upsertPrograms(getDb(), normalizedPrograms);
+  const db = getDb();
+  const result = await upsertPrograms(db, normalizedPrograms);
+  const refreshed = await refreshProgramStatuses(db, now);
 
   process.stdout.write(
     `${JSON.stringify({
@@ -30,6 +32,7 @@ async function main() {
       fetched: fetchResult.items.length,
       normalized: normalizedPrograms.length,
       insertedOrUpdated: result.insertedOrUpdated,
+      refreshed,
       requestedUrl: fetchResult.requestedUrl
     })}\n`
   );

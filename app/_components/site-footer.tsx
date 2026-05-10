@@ -16,7 +16,8 @@ const FOOTER_LINK_GROUPS = [
     links: [
       { href: "/sitemap.xml", label: "사이트맵" },
       { href: "/feed.xml", label: "RSS 피드" },
-      { href: "/llms.txt", label: "AI 인덱스" }
+      { href: "/llms.txt", label: "AI 인덱스" },
+      { href: "/llms-full.txt", label: "AI 상세 인덱스" }
     ]
   }
 ] as const;
@@ -26,9 +27,9 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-line bg-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[1.2fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.3fr_1fr_1fr]">
         <section>
-          <Link href="/" className="text-base font-extrabold text-ink">
+          <Link href="/" className="text-base font-semibold text-ink">
             {siteName}
           </Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
@@ -41,7 +42,7 @@ export function SiteFooter() {
 
         {FOOTER_LINK_GROUPS.map((group) => (
           <section key={group.title}>
-            <h2 className="text-sm font-bold text-ink">{group.title}</h2>
+            <h2 className="text-sm font-semibold text-ink">{group.title}</h2>
             <nav className="mt-3 grid gap-2 text-sm text-slate-600" aria-label={`${group.title} 링크`}>
               {group.links.map((link) => (
                 <Link key={link.href} href={link.href} className="hover:text-brand">

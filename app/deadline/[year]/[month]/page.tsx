@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: DeadlinePageProps) {
 
   return {
     title: `${year}년 ${month}월 마감 창업지원금`,
-    description: `${year}년 ${month}월에 신청이 마감되는 창업지원사업 공고를 확인하세요.`,
+    description: `${year}년 ${month}월에 신청이 마감되는 창업지원사업 공고와 마감 기록을 확인하세요.`,
     alternates: {
       canonical: `/deadline/${year}/${month}`
     }
@@ -47,15 +47,15 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
         <Link href="/" className="text-sm font-semibold text-brand">
           창업머니맵
         </Link>
-        <div className="mt-8 rounded-lg border border-line bg-slate-50 p-6">
+        <header className="mt-8 rounded-lg border border-line bg-slate-50 p-6">
           <CalendarClock className="text-signal" size={32} aria-hidden />
           <h1 className="mt-4 text-3xl font-bold text-ink">
             {year}년 {month}월 마감 창업지원금
           </h1>
           <p className="mt-3 leading-7 text-slate-600">
-            해당 월에 신청 접수가 끝나는 실제 동기화 공고를 마감일 순서로 정리했습니다.
+            해당 월에 신청 접수가 끝나는 공고를 마감일 기준으로 정리했습니다. 이미 마감된 공고도 기록으로 유지합니다.
           </p>
-        </div>
+        </header>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {programs.length > 0 ? (
             programs.map((program) => <ProgramCard key={program.id} program={program} />)

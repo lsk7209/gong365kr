@@ -6,6 +6,7 @@ on:
     - cron: "15 * * * *"
     - cron: "0 21 * * *"
     - cron: "0 22 * * *"
+    - cron: "0 23 * * *"
   workflow_dispatch:
     inputs:
       task:
@@ -50,6 +51,18 @@ jobs:
           BIZINFO_API_KEY: ${{ secrets.BIZINFO_API_KEY }}
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+      - name: Submit index updates
+        run: pnpm tsx scripts/submit-search-index.ts
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
+          SEARCH_SUBMIT_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
+          GSC_CLIENT_EMAIL: ${{ secrets.GSC_CLIENT_EMAIL }}
+          GSC_PRIVATE_KEY: ${{ secrets.GSC_PRIVATE_KEY }}
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          ENABLE_NAVER_INDEXNOW: true
 
   sync-events:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'sync-events') || (github.event.schedule == '15 * * * *' && vars.CRON_ENABLED == 'true')
@@ -76,6 +89,18 @@ jobs:
           BIZINFO_API_KEY: ${{ secrets.BIZINFO_API_KEY }}
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+      - name: Submit index updates
+        run: pnpm tsx scripts/submit-search-index.ts
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
+          SEARCH_SUBMIT_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
+          GSC_CLIENT_EMAIL: ${{ secrets.GSC_CLIENT_EMAIL }}
+          GSC_PRIVATE_KEY: ${{ secrets.GSC_PRIVATE_KEY }}
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          ENABLE_NAVER_INDEXNOW: true
 
   refresh-status:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'refresh-status') || (github.event.schedule == '0 21 * * *' && vars.CRON_ENABLED == 'true')
@@ -102,7 +127,7 @@ jobs:
             --header "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
 
   submit-index:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'submit-index'
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'submit-index') || (github.event.schedule == '0 23 * * *' && vars.CRON_ENABLED == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -121,6 +146,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Submit sitemap and feed
+        run: pnpm run generate-seo-assets
+        continue-on-error: true
+
+      - name: Submit sitemap and feed
         run: pnpm tsx scripts/submit-search-index.ts
         env:
           NEXT_PUBLIC_SITE_URL: ${{ secrets.SEARCH_SUBMIT_SITE_URL }}
@@ -130,3 +159,4 @@ jobs:
           GSC_CLIENT_EMAIL: ${{ secrets.GSC_CLIENT_EMAIL }}
           GSC_PRIVATE_KEY: ${{ secrets.GSC_PRIVATE_KEY }}
           GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          ENABLE_NAVER_INDEXNOW: true

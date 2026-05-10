@@ -20,20 +20,25 @@ const naverSiteVerification = process.env.NAVER_VERIFICATION ?? defaultNaverSite
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} | 창업지원금 공고 모음`,
+    default: `${siteName} | 창업지원사업 공고 검색`,
     template: `%s | ${siteName}`
   },
-  description: "창업지원사업, 정책자금, 지자체 보조금을 한곳에서 비교하고 자격 적합도를 확인하세요.",
+  description:
+    "창업지원사업, 정책자금, 지역별 창업지원금과 이벤트 정보를 한곳에서 정리하고 원문 공고까지 바로 확인할 수 있는 정보 서비스입니다.",
   alternates: {
     canonical: "/"
   },
   openGraph: {
-    title: `${siteName} | 창업지원금 공고 모음`,
-    description: "예비창업자와 초기 창업자를 위한 정부 지원사업 탐색 서비스입니다.",
+    title: `${siteName} | 창업지원사업 공고 검색`,
+    description: "창업자에게 필요한 지원사업과 정책자금 정보를 빠르게 정리해 비교하고 확인할 수 있는 가이드",
     url: siteUrl,
     siteName,
     locale: "ko_KR",
     type: "website"
+  },
+  robots: {
+    index: true,
+    follow: true
   },
   verification: {
     google: googleSiteVerification,
@@ -50,6 +55,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        {adsenseClient ? (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+            crossOrigin="anonymous"
+          />
+        ) : null}
+      </head>
       <body>
         {gaId ? (
           <>
@@ -58,21 +72,13 @@ export default function RootLayout({
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){window.dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${gaId}');
+                gtag("js", new Date());
+                gtag("config", "${gaId}");
               `}
             </Script>
           </>
         ) : null}
-        {adsenseClient ? (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        ) : null}
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen flex-col bg-surface">
           <SiteHeader />
           <div className="flex-1">{children}</div>
           <SiteFooter />

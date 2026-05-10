@@ -1,10 +1,34 @@
 import { createHash, createSign } from "node:crypto";
 import { getSiteUrl, normalizeSiteUrl } from "@/lib/site";
+import { readEventData } from "@/lib/events/page-data";
+import { listEventSlugsForSitemap } from "@/lib/events/query-repository";
+import { readProgramData } from "@/lib/programs/page-data";
+import { listProgramSlugsForSitemap } from "@/lib/programs/query-repository";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_SITEMAP_SCOPE = "https://www.googleapis.com/auth/webmasters";
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
-const DEFAULT_URL_PATHS = ["/", "/check", "/regions", "/sitemap.xml", "/feed.xml"] as const;
+const NAVER_INDEXNOW_ENDPOINT = "https://searchadvisor.naver.com/indexnow";
+
+const SITEMAP_PROGRAM_LIMIT = 500;
+const SITEMAP_EVENT_LIMIT = 200;
+const SUBMISSION_PROGRAM_LIMIT = 120;
+const SUBMISSION_EVENT_LIMIT = 120;
+const SUBMISSION_MONTH_LIMIT = 3;
+const DEFAULT_URL_PATHS = [
+  "/",
+  "/check",
+  "/programs",
+  "/events",
+  "/regions",
+  "/sitemap.xml",
+  "/feed.xml",
+  "/llms.txt",
+  "/llms-full.txt",
+  "/ai-index.json",
+  "/robots.txt"
+] as const;
+const STATIC_FILE_PATHS = ["/sitemap.xml", "/robots.txt", "/feed.xml", "/llms.txt", "/llms-full.txt", "/ai-index.json"] as const;
 
 type SubmissionResult = {
   target: string;
@@ -19,8 +43,14 @@ type ServiceAccountInput = {
 
 async function main() {
   const siteUrl = getSearchSiteUrl();
-  const urls = createSubmissionUrls(siteUrl);
-  const results = await Promise.all([submitGoogleSitemap(siteUrl), submitIndexNow(siteUrl, urls)]);
+  const urls = await createSubmissionUrls(siteUrl);
+  const targets: Promise<SubmissionResult>[] = [submitGoogleSitemap(siteUrl), submitIndexNow(siteUrl, urls, INDEXNOW_ENDPOINT, "indexnow")];
+
+  if (process.env.ENABLE_NAVER_INDEXNOW === "true" || process.env.SUBMIT_NAVER_INDEXNOW === "true") {
+    targets.push(submitIndexNow(siteUrl, urls, NAVER_INDEXNOW_ENDPOINT, "indexnow-naver"));
+  }
+
+  const results = await Promise.all(targets);
 
   for (const result of results) {
     console.log(`${result.target}: ${result.status} - ${result.detail}`);
@@ -70,18 +100,23 @@ async function submitGoogleSitemap(siteUrl: string): Promise<SubmissionResult> {
   };
 }
 
-async function submitIndexNow(siteUrl: string, urls: string[]): Promise<SubmissionResult> {
+async function submitIndexNow(
+  siteUrl: string,
+  urls: string[],
+  endpoint: string,
+  target: string
+): Promise<SubmissionResult> {
   const key = process.env.INDEXNOW_KEY;
 
   if (!key) {
     return {
-      target: "indexnow",
+      target,
       status: "skipped",
       detail: "INDEXNOW_KEY env is missing"
     };
   }
 
-  const response = await fetch(INDEXNOW_ENDPOINT, {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json; charset=utf-8"
@@ -96,14 +131,14 @@ async function submitIndexNow(siteUrl: string, urls: string[]): Promise<Submissi
 
   if (!response.ok && response.status !== 202) {
     return {
-      target: "indexnow",
+      target,
       status: "failed",
       detail: `${response.status} ${await response.text()}`
     };
   }
 
   return {
-    target: "indexnow",
+    target,
     status: "submitted",
     detail: `${response.status} ${urls.length} urls`
   };
@@ -113,21 +148,53 @@ function getSearchSiteUrl() {
   return normalizeSiteUrl(process.env.SEARCH_SUBMIT_SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? getSiteUrl());
 }
 
-function createSubmissionUrls(siteUrl: string) {
-  return DEFAULT_URL_PATHS.map((path) => `${siteUrl}${path === "/" ? "" : path}`);
+async function createSubmissionUrls(siteUrl: string) {
+  const paths = new Set<string>([...DEFAULT_URL_PATHS, ...createDeadlinePaths(), ...STATIC_FILE_PATHS]);
+  const [programRows, eventRows] = await Promise.all([
+    readProgramData([], (db) => listProgramSlugsForSitemap(db, SITEMAP_PROGRAM_LIMIT)),
+    readEventData([], (db) => listEventSlugsForSitemap(db, SITEMAP_EVENT_LIMIT))
+  ]);
+
+  for (const row of programRows.slice(0, SUBMISSION_PROGRAM_LIMIT)) {
+    paths.add(`/programs/${row.slug}`);
+  }
+
+  for (const row of eventRows.slice(0, SUBMISSION_EVENT_LIMIT)) {
+    paths.add(`/events/${row.slug}`);
+  }
+
+  return Array.from(paths).map((path) => `${siteUrl}${path === "/" ? "" : path}`);
+}
+
+function createDeadlinePaths() {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
+  return Array.from({ length: SUBMISSION_MONTH_LIMIT }, (_, index) => {
+    const target = new Date(year, month - 1 + index, 1);
+    const targetYear = target.getFullYear();
+    const targetMonth = String(target.getMonth() + 1).padStart(2, "0");
+
+    return `/deadline/${targetYear}/${targetMonth}`;
+  });
 }
 
 function readServiceAccount(): ServiceAccountInput | null {
   const rawJson = process.env.GSC_SERVICE_ACCOUNT_JSON;
 
   if (rawJson) {
-    const parsed = JSON.parse(rawJson) as { client_email?: string; private_key?: string };
+    try {
+      const parsed = JSON.parse(rawJson) as { client_email?: string; private_key?: string };
 
-    if (parsed.client_email && parsed.private_key) {
-      return {
-        clientEmail: parsed.client_email,
-        privateKey: parsed.private_key
-      };
+      if (parsed.client_email && parsed.private_key) {
+        return {
+          clientEmail: parsed.client_email,
+          privateKey: parsed.private_key
+        };
+      }
+    } catch {
+      return null;
     }
   }
 

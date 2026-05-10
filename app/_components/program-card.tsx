@@ -6,6 +6,7 @@ import {
   getProgramAgency,
   getProgramCategory,
   getProgramSummary,
+  isProgramClosed,
   type ProgramListItem
 } from "@/lib/programs/display";
 
@@ -15,6 +16,10 @@ type ProgramCardProps = {
 
 export function ProgramCard({ program }: ProgramCardProps) {
   const detailHref = `/programs/${program.slug}`;
+  const closed = isProgramClosed(program);
+  const deadlineClassName = closed
+    ? "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-slate-500"
+    : "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-signal";
 
   return (
     <article className="rounded-lg border border-line bg-white p-5 shadow-panel">
@@ -22,9 +27,9 @@ export function ProgramCard({ program }: ProgramCardProps) {
         <span className="rounded-md bg-teal-50 px-2.5 py-1 text-xs font-bold text-brand">
           {getProgramCategory(program)}
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-signal">
+        <span className={deadlineClassName}>
           <CalendarClock size={14} aria-hidden />
-          {formatDeadline(program.applicationEnd)}
+          {formatDeadline(program)}
         </span>
       </div>
       <h2 className="text-lg font-bold leading-7 text-ink">
@@ -38,7 +43,7 @@ export function ProgramCard({ program }: ProgramCardProps) {
         <span>{getProgramAgency(program)}</span>
       </div>
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 text-sm">
-        <span className="text-slate-500">마감 {formatDate(program.applicationEnd)}</span>
+        <span className="text-slate-500">신청 마감 {formatDate(program.applicationEnd)}</span>
         <Link href={detailHref} className="inline-flex items-center gap-1 font-semibold text-brand">
           상세보기
           <ArrowRight size={15} aria-hidden />

@@ -40,7 +40,12 @@ export function EventCard({ event }: EventCardProps) {
       </div>
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 text-sm">
         <span className="text-slate-500">{formatEventPeriod(event.eventStart, event.eventEnd)}</span>
-        <a href={event.rawUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand">
+        <a
+          href={event.rawUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-semibold text-brand"
+        >
           원문
           <ExternalLink size={15} aria-hidden />
         </a>

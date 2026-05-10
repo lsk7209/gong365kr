@@ -7,7 +7,17 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        userAgent: ["GPTBot", "ClaudeBot", "PerplexityBot", "OAI-SearchBot", "Google-Extended", "Yeti", "Daumoa"],
+        userAgent: [
+          "GPTBot",
+          "ClaudeBot",
+          "PerplexityBot",
+          "OAI-SearchBot",
+          "Google-Extended",
+          "Yeti",
+          "Daumoa",
+          "AnthropicAI",
+          "anthropic-ai"
+        ],
         allow: "/"
       },
       {
