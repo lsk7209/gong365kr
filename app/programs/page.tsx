@@ -5,9 +5,11 @@ import { ProgramCard } from "@/app/_components/program-card";
 import { readProgramData } from "@/lib/programs/page-data";
 import {
   countActiveProgramsByCategory,
+  countProgramsByRegions,
   listActivePrograms,
   type ProgramFilterInput
 } from "@/lib/programs/query-repository";
+import { findRegionByCode, regionRows } from "@/lib/regions";
 
 export const revalidate = 3600;
 const PROGRAMS_PAGE_LIMIT = 50;
@@ -18,6 +20,7 @@ type ProgramsPageProps = {
   searchParams: Promise<{
     q?: string | string[];
     category?: string | string[];
+    region?: string | string[];
   }>;
 };
 
@@ -33,11 +36,13 @@ export const metadata = {
 
 export default async function ProgramsPage({ searchParams }: ProgramsPageProps) {
   const filters = await parseProgramFilters(searchParams);
-  const [programs, categoryFacets] = await Promise.all([
+  const [programs, categoryFacets, regionFacets] = await Promise.all([
     readProgramData([], (db) => listActivePrograms(db, PROGRAMS_PAGE_LIMIT, filters)),
-    readProgramData([], (db) => countActiveProgramsByCategory(db, CATEGORY_FACET_LIMIT))
+    readProgramData([], (db) => countActiveProgramsByCategory(db, CATEGORY_FACET_LIMIT)),
+    readProgramData([], (db) => countProgramsByRegions(db, regionRows))
   ]);
-  const hasActiveFilters = Boolean(filters.keyword || filters.categoryCode);
+  const hasActiveFilters = Boolean(filters.keyword || filters.categoryCode || filters.region);
+  const selectedRegionCode = filters.region?.code;
 
   return (
     <main className="min-h-screen bg-white">
@@ -69,6 +74,24 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
               ))}
             </div>
           </div>
+          <div className="mt-5">
+            <div className="mb-2 text-sm font-bold text-ink">지역</div>
+            <div className="flex flex-wrap gap-2">
+              <FilterLink label="전체" href={createProgramHref({ ...filters, region: undefined })} active={!filters.region} />
+              {regionRows.map((region) => {
+                const count = regionFacets.find((facet) => facet.code === region.code)?.count ?? 0;
+
+                return (
+                  <FilterLink
+                    key={region.code}
+                    label={`${region.name} ${count}`}
+                    href={createProgramHref({ ...filters, region })}
+                    active={selectedRegionCode === region.code}
+                  />
+                );
+              })}
+            </div>
+          </div>
           <div className="mt-4 flex items-center justify-between gap-3 text-sm text-slate-600">
             <span>{programs.length}개 공고 표시</span>
             {hasActiveFilters ? (
@@ -96,7 +119,8 @@ async function parseProgramFilters(searchParams: ProgramsPageProps["searchParams
 
   return {
     keyword: normalizeKeyword(params.q),
-    categoryCode: normalizeFilterValue(params.category)
+    categoryCode: normalizeFilterValue(params.category),
+    region: normalizeRegion(params.region)
   };
 }
 
@@ -114,10 +138,17 @@ function normalizeKeyword(value: string | string[] | undefined) {
   return normalized || undefined;
 }
 
+function normalizeRegion(value: string | string[] | undefined) {
+  const code = normalizeFilterValue(value);
+
+  return code ? findRegionByCode(code) ?? undefined : undefined;
+}
+
 function SearchForm({ filters }: { filters: ProgramFilters }) {
   return (
     <form action="/programs" className="flex flex-col gap-2 sm:flex-row">
       {filters.categoryCode ? <input type="hidden" name="category" value={filters.categoryCode} /> : null}
+      {filters.region ? <input type="hidden" name="region" value={filters.region.code} /> : null}
       <label className="sr-only" htmlFor="program-search">
         지원사업 검색어
       </label>
@@ -158,6 +189,10 @@ function createProgramHref(filters: ProgramFilters) {
 
   if (filters.categoryCode) {
     params.set("category", filters.categoryCode);
+  }
+
+  if (filters.region) {
+    params.set("region", filters.region.code);
   }
 
   if (filters.keyword) {

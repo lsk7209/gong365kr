@@ -19,6 +19,7 @@ export type RegionCount = {
 export type ProgramFilterInput = {
   keyword?: string;
   categoryCode?: string;
+  region?: RegionRow;
 };
 
 export async function listClosingPrograms(db: DbClient, limit: number, now = new Date()): Promise<ProgramListItem[]> {
@@ -166,6 +167,7 @@ function regionKeywordCondition(keywords: readonly string[]) {
 function programFilterCondition(filters: ProgramFilterInput) {
   const conditions = [
     filters.categoryCode ? eq(programs.categoryCode, filters.categoryCode) : undefined,
+    filters.region ? regionKeywordCondition(filters.region.keywords) : undefined,
     filters.keyword ? programKeywordCondition(filters.keyword) : undefined
   ].filter(Boolean);
 
