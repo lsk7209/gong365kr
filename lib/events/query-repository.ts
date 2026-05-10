@@ -1,18 +1,36 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, sql } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { events } from "@/db/schema";
 import type { EventListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
 
-export async function listUpcomingEvents(db: DbClient, limit: number, now = new Date()): Promise<EventListItem[]> {
+export type EventFilterInput = {
+  areaName?: string;
+  eventType?: string;
+};
+
+export type EventFacet = {
+  label: string;
+  count: number;
+};
+
+export async function listUpcomingEvents(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+  filters: EventFilterInput = {}
+): Promise<EventListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
     .select(eventListFields)
     .from(events)
-    .where(sql`${events.status} <> 'closed' and (${events.eventEnd} is null or ${events.eventEnd} >= ${nowSeconds})`)
-    .orderBy(asc(sql`coalesce(${events.eventStart}, ${events.receptionEnd}, ${events.eventEnd}, ${events.lastSyncedAt})`), desc(events.lastSyncedAt))
+    .where(and(activeEventCondition(nowSeconds), eventFilterCondition(filters)))
+    .orderBy(
+      asc(sql`coalesce(${events.eventStart}, ${events.receptionEnd}, ${events.eventEnd}, ${events.lastSyncedAt})`),
+      desc(events.lastSyncedAt)
+    )
     .limit(limit);
 }
 
@@ -24,6 +42,48 @@ export async function getEventBySlug(db: DbClient, slug: string): Promise<EventL
   const [event] = await db.select(eventListFields).from(events).where(eq(events.slug, slug)).limit(1);
 
   return event ?? null;
+}
+
+export async function listEventAreas(db: DbClient, now = new Date(), limit = 20): Promise<EventFacet[]> {
+  const areaCount = count();
+  const rows = await db
+    .select({
+      label: events.areaName,
+      count: areaCount
+    })
+    .from(events)
+    .where(and(activeEventCondition(Math.floor(now.getTime() / 1000)), isNotNull(events.areaName)))
+    .groupBy(events.areaName)
+    .orderBy(desc(areaCount), asc(events.areaName))
+    .limit(limit);
+
+  return rows
+    .filter((row): row is { label: string; count: number } => Boolean(row.label))
+    .map((row) => ({
+      label: row.label,
+      count: row.count
+    }));
+}
+
+export async function listEventTypes(db: DbClient, now = new Date(), limit = 20): Promise<EventFacet[]> {
+  const typeCount = count();
+  const rows = await db
+    .select({
+      label: events.eventType,
+      count: typeCount
+    })
+    .from(events)
+    .where(and(activeEventCondition(Math.floor(now.getTime() / 1000)), isNotNull(events.eventType)))
+    .groupBy(events.eventType)
+    .orderBy(desc(typeCount), asc(events.eventType))
+    .limit(limit);
+
+  return rows
+    .filter((row): row is { label: string; count: number } => Boolean(row.label))
+    .map((row) => ({
+      label: row.label,
+      count: row.count
+    }));
 }
 
 export async function listEventSlugsForSitemap(db: DbClient, limit: number) {
@@ -61,3 +121,16 @@ const eventListFields = {
   createdAt: events.createdAt,
   lastSyncedAt: events.lastSyncedAt
 };
+
+function activeEventCondition(nowSeconds: number) {
+  return sql`${events.status} <> 'closed' and (${events.eventEnd} is null or ${events.eventEnd} >= ${nowSeconds})`;
+}
+
+function eventFilterCondition(filters: EventFilterInput) {
+  const conditions = [
+    filters.areaName ? eq(events.areaName, filters.areaName) : undefined,
+    filters.eventType ? eq(events.eventType, filters.eventType) : undefined
+  ].filter(Boolean);
+
+  return conditions.length > 0 ? and(...conditions) : undefined;
+}
