@@ -26,9 +26,16 @@ const DEFAULT_URL_PATHS = [
   "/llms.txt",
   "/llms-full.txt",
   "/ai-index.json",
-  "/robots.txt"
+  "/robots.txt",
 ] as const;
-const STATIC_FILE_PATHS = ["/sitemap.xml", "/robots.txt", "/feed.xml", "/llms.txt", "/llms-full.txt", "/ai-index.json"] as const;
+const STATIC_FILE_PATHS = [
+  "/sitemap.xml",
+  "/robots.txt",
+  "/feed.xml",
+  "/llms.txt",
+  "/llms-full.txt",
+  "/ai-index.json",
+] as const;
 
 export type SearchSubmitTarget = {
   target: string;
@@ -64,10 +71,15 @@ export async function submitSearchIndexNow(): Promise<SearchSubmitTarget[]> {
   const siteUrl = getSearchSiteUrl();
   const urls = await createSubmissionUrls(siteUrl);
 
-  const targets: Promise<SearchSubmitTarget>[] = [submitGoogleSitemap(siteUrl), submitIndexNow(siteUrl, urls, INDEXNOW_ENDPOINT, "indexnow")];
+  const targets: Promise<SearchSubmitTarget>[] = [
+    submitGoogleSitemap(siteUrl),
+    submitIndexNow(siteUrl, urls, INDEXNOW_ENDPOINT, "indexnow"),
+  ];
 
   if (isNaverIndexNowEnabled()) {
-    targets.push(submitIndexNow(siteUrl, urls, NAVER_INDEXNOW_ENDPOINT, "indexnow-naver"));
+    targets.push(
+      submitIndexNow(siteUrl, urls, NAVER_INDEXNOW_ENDPOINT, "indexnow-naver"),
+    );
   }
 
   return Promise.all(targets);
@@ -86,7 +98,7 @@ export async function getSearchSubmitReadiness(): Promise<SearchSubmitReadiness>
     const urls = await createSubmissionUrls(siteUrl);
     targetUrlCount = urls.length;
     targetUrlSample = urls.slice(0, 5);
-  } catch (error) {
+  } catch {
     targetUrlSample = [];
   }
 
@@ -96,11 +108,13 @@ export async function getSearchSubmitReadiness(): Promise<SearchSubmitReadiness>
     targetUrlSample,
     googleSitemap: {
       ready: serviceAccount.ready,
-      detail: serviceAccount.detail
+      detail: serviceAccount.detail,
     },
     indexNow: {
       ready: indexNowEnabled,
-      detail: indexNowEnabled ? "INDEXNOW_KEY 환경변수 설정됨" : "INDEXNOW_KEY가 없음"
+      detail: indexNowEnabled
+        ? "INDEXNOW_KEY 환경변수 설정됨"
+        : "INDEXNOW_KEY가 없음",
     },
     naverIndexNow: {
       ready: naverEnabled && indexNowEnabled,
@@ -109,16 +123,22 @@ export async function getSearchSubmitReadiness(): Promise<SearchSubmitReadiness>
         ? indexNowEnabled
           ? "ENABLE_NAVER_INDEXNOW 또는 SUBMIT_NAVER_INDEXNOW가 true이고 INDEXNOW_KEY 존재"
           : "네이버 전용 플래그 true이나 INDEXNOW_KEY 미설정"
-        : "네이버 전송 비활성화(ENABLE_NAVER_INDEXNOW/SUBMIT_NAVER_INDEXNOW false)"
-    }
+        : "네이버 전송 비활성화(ENABLE_NAVER_INDEXNOW/SUBMIT_NAVER_INDEXNOW false)",
+    },
   };
 }
 
-async function submitGoogleSitemap(siteUrl: string): Promise<SearchSubmitTarget> {
+async function submitGoogleSitemap(
+  siteUrl: string,
+): Promise<SearchSubmitTarget> {
   const serviceAccount = readServiceAccount();
 
   if (!serviceAccount) {
-    return { target: "google-sitemap", status: "skipped", detail: "GSC service account env is missing" };
+    return {
+      target: "google-sitemap",
+      status: "skipped",
+      detail: "GSC service account env is missing",
+    };
   }
 
   try {
@@ -128,23 +148,28 @@ async function submitGoogleSitemap(siteUrl: string): Promise<SearchSubmitTarget>
     const endpoint = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(propertyUrl)}/sitemaps/${encodeURIComponent(sitemapUrl)}`;
     const response = await fetch(endpoint, {
       method: "PUT",
-      headers: { Authorization: `Bearer ${accessToken}` }
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
       return {
         target: "google-sitemap",
         status: "failed",
-        detail: `${response.status} ${await response.text()}`
+        detail: `${response.status} ${await response.text()}`,
       };
     }
 
-    return { target: "google-sitemap", status: "submitted", detail: sitemapUrl };
-  } catch (error) {
+    return {
+      target: "google-sitemap",
+      status: "submitted",
+      detail: sitemapUrl,
+    };
+  } catch {
     return {
       target: "google-sitemap",
       status: "failed",
-      detail: error instanceof Error ? error.message : "google sitemap submit failed"
+      detail:
+        error instanceof Error ? error.message : "google sitemap submit failed",
     };
   }
 }
@@ -153,7 +178,7 @@ async function submitIndexNow(
   siteUrl: string,
   urls: string[],
   endpoint: string,
-  target: string
+  target: string,
 ): Promise<SearchSubmitTarget> {
   const key = process.env.INDEXNOW_KEY;
 
@@ -168,26 +193,46 @@ async function submitIndexNow(
       host: new URL(siteUrl).host,
       key,
       keyLocation: `${siteUrl}/${key}.txt`,
-      urlList: urls
-    })
+      urlList: urls,
+    }),
   });
 
   if (!response.ok && response.status !== 202) {
-    return { target, status: "failed", detail: `${response.status} ${await response.text()}` };
+    return {
+      target,
+      status: "failed",
+      detail: `${response.status} ${await response.text()}`,
+    };
   }
 
-  return { target, status: "submitted", detail: `${response.status} ${urls.length} urls` };
+  return {
+    target,
+    status: "submitted",
+    detail: `${response.status} ${urls.length} urls`,
+  };
 }
 
 function getSearchSiteUrl() {
-  return normalizeSiteUrl(process.env.SEARCH_SUBMIT_SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? getSiteUrl());
+  return normalizeSiteUrl(
+    process.env.SEARCH_SUBMIT_SITE_URL ??
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      getSiteUrl(),
+  );
 }
 
 async function createSubmissionUrls(siteUrl: string) {
-  const paths = new Set<string>([...DEFAULT_URL_PATHS, ...createDeadlinePaths(), ...STATIC_FILE_PATHS]);
+  const paths = new Set<string>([
+    ...DEFAULT_URL_PATHS,
+    ...createDeadlinePaths(),
+    ...STATIC_FILE_PATHS,
+  ]);
   const [programRows, eventRows] = await Promise.all([
-    readProgramData([], (db) => listProgramSlugsForSitemap(db, SITEMAP_PROGRAM_LIMIT)),
-    readEventData([], (db) => listEventSlugsForSitemap(db, SITEMAP_EVENT_LIMIT))
+    readProgramData([], (db) =>
+      listProgramSlugsForSitemap(db, SITEMAP_PROGRAM_LIMIT),
+    ),
+    readEventData([], (db) =>
+      listEventSlugsForSitemap(db, SITEMAP_EVENT_LIMIT),
+    ),
   ]);
 
   for (const row of programRows.slice(0, SUBMISSION_PROGRAM_LIMIT)) {
@@ -198,11 +243,15 @@ async function createSubmissionUrls(siteUrl: string) {
     paths.add(`/events/${row.slug}`);
   }
 
-  return Array.from(paths).map((path) => `${siteUrl}${path === "/" ? "" : path}`);
+  return Array.from(paths).map(
+    (path) => `${siteUrl}${path === "/" ? "" : path}`,
+  );
 }
 
 function createDeadlinePaths() {
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const now = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+  );
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
@@ -220,9 +269,15 @@ function readServiceAccount(): ServiceAccountInput | null {
 
   if (rawJson) {
     try {
-      const parsed = JSON.parse(rawJson) as { client_email?: string; private_key?: string };
+      const parsed = JSON.parse(rawJson) as {
+        client_email?: string;
+        private_key?: string;
+      };
       if (parsed.client_email && parsed.private_key) {
-        return { clientEmail: parsed.client_email, privateKey: parsed.private_key };
+        return {
+          clientEmail: parsed.client_email,
+          privateKey: parsed.private_key,
+        };
       }
     } catch {
       return null;
@@ -233,7 +288,10 @@ function readServiceAccount(): ServiceAccountInput | null {
     return null;
   }
 
-  return { clientEmail: process.env.GSC_CLIENT_EMAIL, privateKey: process.env.GSC_PRIVATE_KEY.replace(/\\n/g, "\n") };
+  return {
+    clientEmail: process.env.GSC_CLIENT_EMAIL,
+    privateKey: process.env.GSC_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  };
 }
 
 function checkServiceAccountReadiness() {
@@ -241,7 +299,10 @@ function checkServiceAccountReadiness() {
 
   if (rawJson) {
     try {
-      const parsed = JSON.parse(rawJson) as { client_email?: string; private_key?: string };
+      const parsed = JSON.parse(rawJson) as {
+        client_email?: string;
+        private_key?: string;
+      };
 
       if (parsed.client_email && parsed.private_key) {
         return { ready: true, detail: "GSC_SERVICE_ACCOUNT_JSON 사용 가능" };
@@ -249,7 +310,7 @@ function checkServiceAccountReadiness() {
 
       return {
         ready: false,
-        detail: "GSC_SERVICE_ACCOUNT_JSON에 client_email/private_key가 없음"
+        detail: "GSC_SERVICE_ACCOUNT_JSON에 client_email/private_key가 없음",
       };
     } catch {
       return { ready: false, detail: "GSC_SERVICE_ACCOUNT_JSON 파싱 실패" };
@@ -259,7 +320,8 @@ function checkServiceAccountReadiness() {
   if (!process.env.GSC_CLIENT_EMAIL || !process.env.GSC_PRIVATE_KEY) {
     return {
       ready: false,
-      detail: "서비스계정 정보 없음. GSC_SERVICE_ACCOUNT_JSON 또는 GSC_CLIENT_EMAIL/GSC_PRIVATE_KEY 필요"
+      detail:
+        "서비스계정 정보 없음. GSC_SERVICE_ACCOUNT_JSON 또는 GSC_CLIENT_EMAIL/GSC_PRIVATE_KEY 필요",
     };
   }
 
@@ -267,7 +329,10 @@ function checkServiceAccountReadiness() {
 }
 
 function isNaverIndexNowEnabled() {
-  return process.env.ENABLE_NAVER_INDEXNOW === "true" || process.env.SUBMIT_NAVER_INDEXNOW === "true";
+  return (
+    process.env.ENABLE_NAVER_INDEXNOW === "true" ||
+    process.env.SUBMIT_NAVER_INDEXNOW === "true"
+  );
 }
 
 async function createGoogleAccessToken(input: ServiceAccountInput) {
@@ -275,29 +340,31 @@ async function createGoogleAccessToken(input: ServiceAccountInput) {
   const jwt = signJwt(
     {
       alg: "RS256",
-      typ: "JWT"
+      typ: "JWT",
     },
     {
       iss: input.clientEmail,
       scope: GOOGLE_SITEMAP_SCOPE,
       aud: GOOGLE_TOKEN_URL,
       exp: now + 3600,
-      iat: now
+      iat: now,
     },
-    input.privateKey
+    input.privateKey,
   );
   const body = new URLSearchParams({
     grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-    assertion: jwt
+    assertion: jwt,
   });
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body
+    body,
   });
 
   if (!response.ok) {
-    throw new Error(`Google token request failed: ${response.status} ${await response.text()}`);
+    throw new Error(
+      `Google token request failed: ${response.status} ${await response.text()}`,
+    );
   }
 
   const parsed = (await response.json()) as { access_token?: string };
@@ -312,7 +379,9 @@ function signJwt(header: object, payload: object, privateKey: string) {
   const encodedHeader = base64Url(JSON.stringify(header));
   const encodedPayload = base64Url(JSON.stringify(payload));
   const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-  const signature = createSign("RSA-SHA256").update(unsignedToken).sign(privateKey);
+  const signature = createSign("RSA-SHA256")
+    .update(unsignedToken)
+    .sign(privateKey);
 
   return `${unsignedToken}.${base64Url(signature)}`;
 }
@@ -320,15 +389,24 @@ function signJwt(header: object, payload: object, privateKey: string) {
 function base64Url(input: string | Buffer) {
   const buffer = typeof input === "string" ? Buffer.from(input) : input;
 
-  return buffer.toString("base64").replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  return buffer
+    .toString("base64")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
-export function formatSubmitResults(fingerprintSeed: string, results: SearchSubmitTarget[]) {
+export function formatSubmitResults(
+  fingerprintSeed: string,
+  results: SearchSubmitTarget[],
+) {
   if (results.length === 0) {
     return `${fingerprintSeed}: no submission targets`;
   }
 
-  return results.map((result) => `${result.target}=${result.status}:${result.detail}`).join("|");
+  return results
+    .map((result) => `${result.target}=${result.status}:${result.detail}`)
+    .join("|");
 }
 
 export function summarizeSearchSubmit(results: SearchSubmitTarget[]) {
@@ -336,7 +414,7 @@ export function summarizeSearchSubmit(results: SearchSubmitTarget[]) {
     total: results.length,
     submitted: results.filter((result) => result.status === "submitted").length,
     skipped: results.filter((result) => result.status === "skipped").length,
-    failed: results.filter((result) => result.status === "failed").length
+    failed: results.filter((result) => result.status === "failed").length,
   };
 }
 
@@ -369,12 +447,17 @@ export type SearchSubmitSourceInfo = {
   fetchedAtKST: string;
 };
 
-type SearchSubmitSourceInfoInput = Omit<SearchSubmitSourceInfo, "fetchedAt" | "fetchedAtKST"> & {
+type SearchSubmitSourceInfoInput = Omit<
+  SearchSubmitSourceInfo,
+  "fetchedAt" | "fetchedAtKST"
+> & {
   at?: Date;
 };
 
 export function getKstDateTimeKst(date = new Date()) {
-  const kst = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const kst = new Date(
+    date.toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+  );
   const year = kst.getFullYear();
   const month = String(kst.getMonth() + 1).padStart(2, "0");
   const day = String(kst.getDate()).padStart(2, "0");
@@ -385,7 +468,9 @@ export function getKstDateTimeKst(date = new Date()) {
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }
 
-export function buildSearchSubmitSourceInfo(input: SearchSubmitSourceInfoInput): SearchSubmitSourceInfo {
+export function buildSearchSubmitSourceInfo(
+  input: SearchSubmitSourceInfoInput,
+): SearchSubmitSourceInfo {
   const at = input.at ?? new Date();
 
   return {
@@ -397,11 +482,14 @@ export function buildSearchSubmitSourceInfo(input: SearchSubmitSourceInfoInput):
     normalizedCount: input.normalizedCount,
     sampleCount: input.sampleCount,
     fetchedAt: at.toISOString(),
-    fetchedAtKST: getKstDateTimeKst(at)
+    fetchedAtKST: getKstDateTimeKst(at),
   };
 }
 
-export function evaluateSearchSubmitHealth(readiness: SearchSubmitReadiness, summary: ReturnType<typeof summarizeSearchSubmit>) {
+export function evaluateSearchSubmitHealth(
+  readiness: SearchSubmitReadiness,
+  summary: ReturnType<typeof summarizeSearchSubmit>,
+) {
   const missing = [];
 
   if (!readiness.googleSitemap.ready) {
@@ -423,7 +511,7 @@ export function evaluateSearchSubmitHealth(readiness: SearchSubmitReadiness, sum
     blockers,
     missing,
     note: missing.length === 0 && summary.failed === 0 ? "ready" : "not_ready",
-    status: missing.length === 0 && summary.failed === 0 ? "ok" : "warning"
+    status: missing.length === 0 && summary.failed === 0 ? "ok" : "warning",
   };
 }
 
@@ -451,7 +539,9 @@ export function formatSearchSubmitHealthMessage(health: SearchSubmitHealth) {
   return messages.join(" | ");
 }
 
-export function requiredSearchSubmitActions(health: SearchSubmitHealth): SearchSubmitAction[] {
+export function requiredSearchSubmitActions(
+  health: SearchSubmitHealth,
+): SearchSubmitAction[] {
   if (health.ok) {
     return [];
   }
@@ -463,8 +553,9 @@ export function requiredSearchSubmitActions(health: SearchSubmitHealth): SearchS
       actions.push({
         code: "GSC_AUTH_MISSING",
         title: "GSC 서비스 계정 확인",
-        detail: "GSC_SERVICE_ACCOUNT_JSON 또는 GSC_CLIENT_EMAIL/GSC_PRIVATE_KEY를 .env에 등록하세요.",
-        priority: "high"
+        detail:
+          "GSC_SERVICE_ACCOUNT_JSON 또는 GSC_CLIENT_EMAIL/GSC_PRIVATE_KEY를 .env에 등록하세요.",
+        priority: "high",
       });
     }
     if (missing === "indexnow_key") {
@@ -472,15 +563,16 @@ export function requiredSearchSubmitActions(health: SearchSubmitHealth): SearchS
         code: "INDEXNOW_KEY_MISSING",
         title: "IndexNow 키 등록",
         detail: "INDEXNOW_KEY 값을 환경변수에 등록하세요.",
-        priority: "high"
+        priority: "high",
       });
     }
     if (missing === "naver_indexnow_key") {
       actions.push({
         code: "NAVER_INDEXNOW_KEY_MISSING",
         title: "네이버 IndexNow 키 확인",
-        detail: "네이버 전송을 사용할 경우 INDEXNOW_KEY가 동일하게 요구됩니다. (또는 네이버 플래그 비활성화)",
-        priority: "medium"
+        detail:
+          "네이버 전송을 사용할 경우 INDEXNOW_KEY가 동일하게 요구됩니다. (또는 네이버 플래그 비활성화)",
+        priority: "medium",
       });
     }
   }
@@ -489,15 +581,18 @@ export function requiredSearchSubmitActions(health: SearchSubmitHealth): SearchS
     actions.push({
       code: "SUBMISSION_FAILED",
       title: "제출 실패 로그 점검",
-      detail: "targets[].detail의 응답 코드/메시지를 운영 로그에서 확인하고 재시도하세요.",
-      priority: "high"
+      detail:
+        "targets[].detail의 응답 코드/메시지를 운영 로그에서 확인하고 재시도하세요.",
+      priority: "high",
     });
   }
 
   return actions;
 }
 
-export function getSearchSubmitHttpStatus(health: SearchSubmitHealth): 200 | 207 | 502 {
+export function getSearchSubmitHttpStatus(
+  health: SearchSubmitHealth,
+): 200 | 207 | 502 {
   if (health.ok) {
     return 200;
   }
@@ -509,7 +604,9 @@ export function getSearchSubmitHttpStatus(health: SearchSubmitHealth): 200 | 207
   return 207;
 }
 
-export function getSearchSubmitRetryAfterSeconds(health: SearchSubmitHealth): number | null {
+export function getSearchSubmitRetryAfterSeconds(
+  health: SearchSubmitHealth,
+): number | null {
   if (health.ok) {
     return null;
   }
@@ -522,14 +619,20 @@ export function getSearchSubmitRetryAfterSeconds(health: SearchSubmitHealth): nu
     return 3600;
   }
 
-  if (health.missing.includes("indexnow_key") || health.missing.includes("naver_indexnow_key")) {
+  if (
+    health.missing.includes("indexnow_key") ||
+    health.missing.includes("naver_indexnow_key")
+  ) {
     return 1800;
   }
 
   return 900;
 }
 
-export function getSearchSubmitNextRetryAt(health: SearchSubmitHealth, now = new Date()): string | null {
+export function getSearchSubmitNextRetryAt(
+  health: SearchSubmitHealth,
+  now = new Date(),
+): string | null {
   const retryAfterSeconds = getSearchSubmitRetryAfterSeconds(health);
   if (retryAfterSeconds === null) {
     return null;

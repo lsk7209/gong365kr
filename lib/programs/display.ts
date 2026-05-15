@@ -2,7 +2,7 @@ import type { ProgramStatus } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_CATEGORY = "지원사업";
-const DEFAULT_SUMMARY = "상세 내용은 원문 공고에서 확인할 수 있습니다.";
+
 const DEFAULT_AGENCY = "공고 기관 확인 필요";
 export const PROGRAM_CATEGORY_LABELS = [
   "창업",
