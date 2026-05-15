@@ -164,7 +164,7 @@ async function submitGoogleSitemap(
       status: "submitted",
       detail: sitemapUrl,
     };
-  } catch {
+  } catch (error) {
     return {
       target: "google-sitemap",
       status: "failed",
