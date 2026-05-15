@@ -1,13 +1,13 @@
-# Status | 마지막: 2026-05-15
+# Status | 마지막: 2026-05-16
 ## 현재 작업
-- 블로그 메뉴 + 창업 관련 글 10개 추가 완료 → Vercel 배포 중
+- 블로그 글 품질 업그레이드 완료 → Vercel 배포 중
 
 ## 최근 변경 (최근 5개)
+- 05-16: 블로그 글 1,2,4,6,7,8번 고품질 콘텐츠로 업그레이드 (비교표·체크리스트·FAQ 포함)
 - 05-16: 블로그 메뉴 + 창업 관련 글 10개 추가 (lib/blog, app/blog)
 - 05-15: KSTARTUP_SERVICE_KEY Vercel env 등록 완료
 - 05-15: K-Startup 엔드포인트 수정 + 실제 필드명(pbanc_sn 등) 반영
 - 05-15: K-Startup API 연동 (lib/kstartup, sync-kstartup cron)
-- 05-15: Clarity 설치, GA4 전환 이벤트(program_apply_clicked/event_apply_clicked)
 
 ## 완료된 최적화
 - Phase 2 SEO: OG/BreadcrumbList/JSON-LD 전 페이지 완료
