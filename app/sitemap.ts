@@ -15,8 +15,13 @@ export const revalidate = 86400;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const siteUrl = getSiteUrl();
-  const [programUrls, eventUrls] = await Promise.all([readProgramSitemapUrls(siteUrl), readEventSitemapUrls(siteUrl)]);
-  const latestContentModified = getLatestDate([...programUrls, ...eventUrls].map((item) => item.lastModified));
+  const [programUrls, eventUrls] = await Promise.all([
+    readProgramSitemapUrls(siteUrl),
+    readEventSitemapUrls(siteUrl),
+  ]);
+  const latestContentModified = getLatestDate(
+    [...programUrls, ...eventUrls].map((item) => item.lastModified),
+  );
   const effectiveLastModified = latestContentModified ?? now;
 
   return [
@@ -57,7 +62,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 }
 
-function readDeadlineSitemapUrls(siteUrl: string, lastModified: Date): MetadataRoute.Sitemap {
+function readDeadlineSitemapUrls(
+  siteUrl: string,
+  lastModified: Date,
+): MetadataRoute.Sitemap {
   const now = getSeoulDate();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
@@ -74,7 +82,10 @@ function readDeadlineSitemapUrls(siteUrl: string, lastModified: Date): MetadataR
   });
 }
 
-function readRegionSitemapUrls(siteUrl: string, lastModified: Date): MetadataRoute.Sitemap {
+function readRegionSitemapUrls(
+  siteUrl: string,
+  lastModified: Date,
+): MetadataRoute.Sitemap {
   return regionRows.map((region) => ({
     url: `${siteUrl}/regions/${region.code}`,
     lastModified,
@@ -83,13 +94,18 @@ function readRegionSitemapUrls(siteUrl: string, lastModified: Date): MetadataRou
   }));
 }
 
-async function readProgramSitemapUrls(siteUrl: string): Promise<MetadataRoute.Sitemap> {
+async function readProgramSitemapUrls(
+  siteUrl: string,
+): Promise<MetadataRoute.Sitemap> {
   if (!hasRequiredEnv(["TURSO_DATABASE_URL"])) {
     return [];
   }
 
   try {
-    const rows = await listProgramSlugsForSitemap(getDb(), PROGRAM_SITEMAP_LIMIT);
+    const rows = await listProgramSlugsForSitemap(
+      getDb(),
+      PROGRAM_SITEMAP_LIMIT,
+    );
 
     return rows.map((row) => ({
       url: `${siteUrl}/programs/${row.slug}`,
@@ -102,7 +118,9 @@ async function readProgramSitemapUrls(siteUrl: string): Promise<MetadataRoute.Si
   }
 }
 
-async function readEventSitemapUrls(siteUrl: string): Promise<MetadataRoute.Sitemap> {
+async function readEventSitemapUrls(
+  siteUrl: string,
+): Promise<MetadataRoute.Sitemap> {
   if (!hasRequiredEnv(["TURSO_DATABASE_URL"])) {
     return [];
   }
@@ -125,10 +143,11 @@ function addMonths(year: number, baseMonthIndex: number, offset: number) {
   return new Date(year, baseMonthIndex + offset, 1);
 }
 
-function getLatestDate(values: Array<Date | null | undefined>) {
+function getLatestDate(values: Array<string | Date | null | undefined>) {
   return values.reduce<Date | null>((acc, value) => {
     if (!value) return acc;
+    const date = typeof value === "string" ? new Date(value) : value;
 
-    return !acc || value.getTime() > acc.getTime() ? value : acc;
+    return !acc || date.getTime() > acc.getTime() ? date : acc;
   }, null);
 }
