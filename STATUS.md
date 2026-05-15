@@ -1,14 +1,12 @@
 # Status | 마지막: 2026-05-15
 ## 현재 작업
-- Phase 6 GSC 분석 완료: 15개 URL 색인, 노출 있으나 클릭 0 (사이트 1개월차 정상)
-- 최다 노출 페이지: tech-recruit-program-2026-ax (24회, 위치 6.8)
-- 키워드 데이터 축적 대기 중 (2-4주 후 CTR 개선 작업 예정)
+- 블로그 메뉴 + 창업 관련 글 10개 추가 완료 → Vercel 배포 중
 
 ## 최근 변경 (최근 5개)
+- 05-16: 블로그 메뉴 + 창업 관련 글 10개 추가 (lib/blog, app/blog)
+- 05-15: KSTARTUP_SERVICE_KEY Vercel env 등록 완료
 - 05-15: K-Startup 엔드포인트 수정 + 실제 필드명(pbanc_sn 등) 반영
 - 05-15: K-Startup API 연동 (lib/kstartup, sync-kstartup cron)
-- 05-15: GaPageView Suspense 래핑 (useSearchParams prerender 오류 수정)
-- 05-15: isEventClosedCondition/isProgramClosedCondition → sql 템플릿으로 변경
 - 05-15: Clarity 설치, GA4 전환 이벤트(program_apply_clicked/event_apply_clicked)
 
 ## 완료된 최적화
