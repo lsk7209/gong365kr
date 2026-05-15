@@ -1,6 +1,8 @@
 # Status | 마지막: 2026-05-15
 ## 현재 작업
-- K-Startup API 연동 완료 (엔드포인트·필드명 수정까지)
+- Phase 6 GSC 분석 완료: 15개 URL 색인, 노출 있으나 클릭 0 (사이트 1개월차 정상)
+- 최다 노출 페이지: tech-recruit-program-2026-ax (24회, 위치 6.8)
+- 키워드 데이터 축적 대기 중 (2-4주 후 CTR 개선 작업 예정)
 
 ## 최근 변경 (최근 5개)
 - 05-15: K-Startup 엔드포인트 수정 + 실제 필드명(pbanc_sn 등) 반영
@@ -9,11 +11,17 @@
 - 05-15: isEventClosedCondition/isProgramClosedCondition → sql 템플릿으로 변경
 - 05-15: Clarity 설치, GA4 전환 이벤트(program_apply_clicked/event_apply_clicked)
 
+## 완료된 최적화
+- Phase 2 SEO: OG/BreadcrumbList/JSON-LD 전 페이지 완료
+- Phase 3 속도: content-visibility, Clarity, next.config 완료
+- Phase 4 컨텐츠: RelatedEventList, summaryShort 개선 완료
+- Phase 5 AdSense: adsense-unit.tsx 준비 완료 (승인 대기)
+
 ## TODO
-- [ ] **KSTARTUP_SERVICE_KEY Vercel env 등록** → 키: data.go.kr에서 발급한 키 입력 후 redeploy
+- [ ] **KSTARTUP_SERVICE_KEY Vercel env 등록** → 발급한 키 입력 후 redeploy
 - [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정 → 광고 단위 배치
-- [ ] GA4 콘솔에서 program_apply_clicked·event_apply_clicked 전환 이벤트 표시 (수동, 클릭 발생 후)
-- [ ] Vercel env에 CRON_SECRET 설정 → 수동 cron 호출 가능 (선택사항)
+- [ ] GA4 콘솔에서 program_apply_clicked·event_apply_clicked 전환 이벤트 표시 (수동)
+- [ ] GSC 2-4주 후 재분석 → 키워드 데이터 축적 후 CTR 낮은 페이지 개선
 
 ## 결정사항
 - meta_priority: naver → description 80자 적용 (B-03)
