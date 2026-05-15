@@ -209,10 +209,10 @@ export default async function ProgramDetailPage({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white"
                 label={`${program.slug}-official`}
+                eventName="program_apply_clicked"
                 eventParams={{
                   content_type: "program",
                   content_id: program.id,
-                  action: "open_official",
                 }}
               >
                 공고 바로가기

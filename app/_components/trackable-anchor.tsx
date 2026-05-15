@@ -1,12 +1,17 @@
 "use client";
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
-import { trackCtaClicked, type GaTrackCategory } from "@/lib/analytics/gtag";
+import {
+  trackCtaClicked,
+  trackEvent,
+  type GaTrackCategory,
+} from "@/lib/analytics/gtag";
 
 type TrackableAnchorProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   children: ReactNode;
   category?: GaTrackCategory;
   label?: string;
+  eventName?: string;
   eventParams?: Record<string, string | number | boolean | null>;
   trackingDisabled?: boolean;
 };
@@ -15,6 +20,7 @@ export function TrackableAnchor({
   children,
   category = "cta_clicked",
   label,
+  eventName,
   eventParams,
   trackingDisabled = false,
   onClick,
@@ -22,10 +28,15 @@ export function TrackableAnchor({
 }: TrackableAnchorProps) {
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!trackingDisabled) {
-      trackCtaClicked(label ?? anchorProps.href?.toString() ?? "anchor", {
-        event_category: category,
-        ...(eventParams ?? {})
-      });
+      const target = label ?? anchorProps.href?.toString() ?? "anchor";
+      if (eventName) {
+        trackEvent(eventName, { event_label: target, ...(eventParams ?? {}) });
+      } else {
+        trackCtaClicked(target, {
+          event_category: category,
+          ...(eventParams ?? {}),
+        });
+      }
     }
 
     if (onClick) {

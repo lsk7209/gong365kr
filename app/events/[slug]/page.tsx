@@ -172,10 +172,10 @@ export default async function EventDetailPage({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white"
                 label={`${event.slug}-event-main`}
+                eventName="event_apply_clicked"
                 eventParams={{
                   content_type: "event",
                   content_id: event.id,
-                  action: "open_event",
                 }}
                 title="행사 신청 바로가기"
               >
