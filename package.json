@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "tsx scripts/submit-search-index.ts",
     "submit-search-index": "tsx scripts/submit-search-index.ts",
     "generate-seo-assets": "tsx scripts/generate-seo-assets.ts",
     "lint": "eslint . --max-warnings=0",
