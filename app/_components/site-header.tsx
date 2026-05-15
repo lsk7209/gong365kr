@@ -7,14 +7,21 @@ const NAV_LINKS = [
   { href: "/programs", label: "전체 공고" },
   { href: "/events", label: "행사정보" },
   { href: "/regions", label: "지역별" },
-  { href: "/check", label: "적합도 체크" }
+  { href: "/check", label: "적합도 체크" },
+  { href: "/blog", label: "블로그" },
 ] as const;
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3" aria-label="주요 메뉴">
-        <Link href="/" className="flex min-w-fit items-center gap-2 text-base font-semibold text-ink">
+      <nav
+        className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3"
+        aria-label="주요 메뉴"
+      >
+        <Link
+          href="/"
+          className="flex min-w-fit items-center gap-2 text-base font-semibold text-ink"
+        >
           <span className="flex size-8 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
             공
           </span>
