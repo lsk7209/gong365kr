@@ -1,19 +1,19 @@
 # Status | 마지막: 2026-05-15
 ## 현재 작업
-- 배포 안정화 완료 (● Ready)
+- K-Startup API 연동 완료 (엔드포인트·필드명 수정까지)
 
 ## 최근 변경 (최근 5개)
+- 05-15: K-Startup 엔드포인트 수정 + 실제 필드명(pbanc_sn 등) 반영
+- 05-15: K-Startup API 연동 (lib/kstartup, sync-kstartup cron)
 - 05-15: GaPageView Suspense 래핑 (useSearchParams prerender 오류 수정)
-- 05-15: isEventClosedCondition/isProgramClosedCondition → sql 템플릿으로 변경 (SQL|undefined→SQL)
-- 05-15: sitemap.ts getLatestDate string|Date 타입 지원
-- 05-15: BIZINFO_API_KEY=BZNQ06 Vercel 등록
+- 05-15: isEventClosedCondition/isProgramClosedCondition → sql 템플릿으로 변경
 - 05-15: Clarity 설치, GA4 전환 이벤트(program_apply_clicked/event_apply_clicked)
 
 ## TODO
-- [ ] Vercel env에 CRON_SECRET 설정 → 수동 cron 호출 가능 (선택사항, scheduled 자동 실행은 정상)
-- [ ] GA4 콘솔에서 program_apply_clicked·event_apply_clicked 전환 이벤트 표시 (수동)
+- [ ] **KSTARTUP_SERVICE_KEY Vercel env 등록** → 키: data.go.kr에서 발급한 키 입력 후 redeploy
 - [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정 → 광고 단위 배치
-- [ ] BIZINFO_API_KEY 발급 → sync/sync-events cron 실제 데이터 수집
+- [ ] GA4 콘솔에서 program_apply_clicked·event_apply_clicked 전환 이벤트 표시 (수동, 클릭 발생 후)
+- [ ] Vercel env에 CRON_SECRET 설정 → 수동 cron 호출 가능 (선택사항)
 
 ## 결정사항
 - meta_priority: naver → description 80자 적용 (B-03)
