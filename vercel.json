@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/sync-events",
+      "schedule": "30 */6 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-status",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/submit-search",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

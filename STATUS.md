@@ -1,28 +1,25 @@
-# Status | 마지막: 2026-05-11
+# Status | 마지막: 2026-05-15
 ## 현재 작업
-- site-optimizer T2 전체 적용 완료 → Vercel 배포 트리거됨
-- G-01(Microsoft Clarity) 선택 항목만 미적용 (Clarity ID 필요)
+- site-optimizer 진단 + T2 패치 적용 완료 → 배포 대기
 
 ## 최근 변경 (최근 5개)
+- 05-15: llms.txt/llms-full.txt/ai-index.json 동적 route 전환 (DB 실시간 반영)
+- 05-15: vercel.json cron 설정 추가 (sync 6h, submit-search 03:00)
+- 05-15: cron-auth x-vercel-cron 우선 허용 (CRON_SECRET 없어도 Vercel cron 작동)
+- 05-15: Vercel env ENABLE_NAVER_INDEXNOW=true, GSC_SERVICE_ACCOUNT_JSON 추가
 - 05-11: site-optimizer T2 일괄 적용 (A-01/A-02/B-01/B-02/B-03/C-02)
-- 05-11: GA4 추적 인프라 + Trackable 컴포넌트 적용
-- 05-11: `/api/cron/submit-search` 검색엔진 자동 색인 제출 파이프라인
-- 05-11: `app/api/cron/sync` `sourceInfo` 공통 포맷 전환
-- 05-11: `lib/search-submit.ts` SearchSubmitSourceInfo 공통 빌더 추가
 
 ## TODO
-- [ ] Vercel 배포 확인 후 `/sitemap.xml`, `/feed.xml`, `robots.txt` 점검
-- [ ] `/api/cron/submit-search` 수동 호출 → 응답 JSON 확인
-- [ ] GA4/GSC/IndexNow 환경변수 존재 여부 검증
+- [ ] 배포 후 `/llms.txt` DB 건수 반영 확인
+- [ ] `/api/cron/submit-search` 수동 호출 → 네이버/Google 제출 상태 확인
 - [ ] G-01: Microsoft Clarity 설치 (Clarity 프로젝트 ID 확보 후)
 - [ ] 상세 페이지 디자인 리뷰 (plan/programs/events/regions)
 
 ## 결정사항
 - meta_priority: naver → description 80자 적용 (B-03)
-- OG 이미지 PNG 직접 생성 (@napi-rs/canvas), SVG 파일은 유지
-- FAQPage JSON-LD Article에서 독립 분리 → 구글 리치결과 인식
+- llms 파일: 정적→동적 route 전환 (public/ 파일 삭제, app/ route 생성)
+- cron-auth: Vercel 내부 cron은 CRON_SECRET 없이 x-vercel-cron 헤더로 허용
 
 ## 주의
-- `GSC_SERVICE_ACCOUNT_JSON` 또는 `GSC_CLIENT_EMAIL`/`GSC_PRIVATE_KEY` 없으면 인덱싱 제출 실패
-- `INDEXNOW_KEY` 없으면 네이버 제출 스킵
-- llms.txt "0건 샘플" → 크론 sync 실행 후 자동 해소 (T1)
+- Vercel env 추가 후 redeploy 필요 (env만 추가하면 자동 재배포 안 됨)
+- vercel.json cron은 Vercel Pro 플랜 이상 필요
