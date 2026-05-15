@@ -489,7 +489,7 @@ export function buildSearchSubmitSourceInfo(
 export function evaluateSearchSubmitHealth(
   readiness: SearchSubmitReadiness,
   summary: ReturnType<typeof summarizeSearchSubmit>,
-) {
+): SearchSubmitHealth {
   const missing = [];
 
   if (!readiness.googleSitemap.ready) {
