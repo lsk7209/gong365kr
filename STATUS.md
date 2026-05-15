@@ -12,7 +12,7 @@
 ## TODO
 - [ ] 배포 후 `/llms.txt` DB 건수 반영 확인
 - [ ] `/api/cron/submit-search` 수동 호출 → 네이버/Google 제출 상태 확인
-- [ ] G-01: Microsoft Clarity 설치 (Clarity 프로젝트 ID 확보 후)
+- [x] G-01: Microsoft Clarity 설치 완료 (wrh98x6yta, Vercel env 추가)
 - [x] Phase 6: GSC 분석 완료 (이슈 0, 노출 15페이지, 클릭 0 — 신규 사이트 정상)
 - [ ] Phase 7: GA4 콘솔에서 open_official·open_event 전환 이벤트 표시 (수동)
 - [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정 → 광고 단위 배치
