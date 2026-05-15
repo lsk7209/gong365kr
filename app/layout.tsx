@@ -104,6 +104,12 @@ export default function RootLayout({
             </Script>
           </>
         ) : null}
+        {process.env.NEXT_PUBLIC_CLARITY_ID ? (
+          <Script
+            src={`https://www.clarity.ms/tag/${process.env.NEXT_PUBLIC_CLARITY_ID}`}
+            strategy="afterInteractive"
+          />
+        ) : null}
         <div className="flex min-h-screen flex-col bg-surface">
           <SiteHeader />
           <div className="flex-1">{children}</div>

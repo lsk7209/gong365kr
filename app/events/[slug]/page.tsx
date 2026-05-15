@@ -2,6 +2,7 @@ import { CalendarDays, ExternalLink, FileText, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { GaContentComplete } from "@/app/_components/ga-content-complete";
+import { RelatedEventList } from "@/app/_components/related-event-list";
 import { TrackableAnchor } from "@/app/_components/trackable-anchor";
 import { TrackableLink } from "@/app/_components/trackable-link";
 import {
@@ -86,6 +87,7 @@ export default async function EventDetailPage({
     <main className="min-h-screen bg-white">
       <article className="mx-auto max-w-4xl px-4 py-12">
         <EventJsonLd event={event} closed={closed} />
+        <BreadcrumbJsonLd event={event} />
         <GaContentComplete
           contentType="event"
           title={event.title}
@@ -238,6 +240,8 @@ export default async function EventDetailPage({
           </div>
         </section>
 
+        <RelatedEventList event={event} />
+
         <section className="py-8">
           <h2 className="text-xl font-semibold text-ink">적합성 확인</h2>
           <p className="mt-3 text-sm leading-7 text-slate-700">
@@ -358,6 +362,37 @@ function EventJsonLd({
         },
       ],
     },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+function BreadcrumbJsonLd({
+  event,
+}: {
+  event: NonNullable<Awaited<ReturnType<typeof getEventBySlug>>>;
+}) {
+  const siteUrl = getSiteUrl();
+  const pageUrl = `${siteUrl}/events/${event.slug}`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "행사·교육 일정",
+        item: `${siteUrl}/events`,
+      },
+      { "@type": "ListItem", position: 3, name: event.title, item: pageUrl },
+    ],
   };
 
   return (

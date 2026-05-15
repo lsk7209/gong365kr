@@ -1,18 +1,21 @@
 # Status | 마지막: 2026-05-15
 ## 현재 작업
-- site-optimizer 진단 + T2 패치 적용 완료 → 배포 대기
+- Phase 1~5 최적화 완료, Vercel 배포 대기 중
 
 ## 최근 변경 (최근 5개)
+- 05-15: Phase 1~5 종합 최적화 (페르소나/SEO/성능/컨텐츠/AdSense)
+- 05-15: events/programs 상세 페이지 JSX/JS 문법 오류 수정 (EUC-KR 깨진 한글 → 정상화)
 - 05-15: llms.txt/llms-full.txt/ai-index.json 동적 route 전환 (DB 실시간 반영)
 - 05-15: vercel.json cron 설정 추가 (sync 6h, submit-search 03:00)
 - 05-15: cron-auth x-vercel-cron 우선 허용 (CRON_SECRET 없어도 Vercel cron 작동)
-- 05-15: Vercel env ENABLE_NAVER_INDEXNOW=true, GSC_SERVICE_ACCOUNT_JSON 추가
-- 05-11: site-optimizer T2 일괄 적용 (A-01/A-02/B-01/B-02/B-03/C-02)
 
 ## TODO
 - [ ] 배포 후 `/llms.txt` DB 건수 반영 확인
 - [ ] `/api/cron/submit-search` 수동 호출 → 네이버/Google 제출 상태 확인
 - [ ] G-01: Microsoft Clarity 설치 (Clarity 프로젝트 ID 확보 후)
+- [ ] Phase 6: improve.sh 실행 → GSC 분석 → CTR 낮은 페이지 수정
+- [ ] Phase 7: GA4 퍼널 분석 → 전환 이벤트 설정
+- [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정 → 광고 단위 배치
 - [ ] 상세 페이지 디자인 리뷰 (plan/programs/events/regions)
 
 ## 결정사항

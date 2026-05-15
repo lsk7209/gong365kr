@@ -6,7 +6,7 @@ import { ProgramCard } from "@/app/_components/program-card";
 import { readProgramData } from "@/lib/programs/page-data";
 import {
   listClosedProgramsByDeadlineMonth,
-  listOpenProgramsByDeadlineMonth
+  listOpenProgramsByDeadlineMonth,
 } from "@/lib/programs/query-repository";
 
 type DeadlinePageProps = {
@@ -24,11 +24,17 @@ export async function generateMetadata({ params }: DeadlinePageProps) {
   const { year, month } = await params;
 
   return {
-    title: `${year}년 ${month}월 마감 창업지원금`,
+    title: `${year}년 ${month}월 마감 창업지원금 | 창업머니맵`,
     description: `${year}년 ${month}월에 신청이 마감되는 창업지원사업 공고와 마감 기록을 확인하세요.`,
     alternates: {
-      canonical: `/deadline/${year}/${month}`
-    }
+      canonical: `/deadline/${year}/${month}`,
+    },
+    openGraph: {
+      title: `${year}년 ${month}월 마감 창업지원금`,
+      description: `${year}년 ${month}월에 신청이 마감되는 창업지원사업 공고와 마감 기록을 확인하세요.`,
+      locale: "ko_KR",
+      type: "website",
+    },
   };
 }
 
@@ -43,11 +49,23 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
 
   const [activePrograms, closedPrograms] = await Promise.all([
     readProgramData([], (db) =>
-      listOpenProgramsByDeadlineMonth(db, parsedYear, parsedMonth, DEADLINE_PAGE_LIMIT, new Date())
+      listOpenProgramsByDeadlineMonth(
+        db,
+        parsedYear,
+        parsedMonth,
+        DEADLINE_PAGE_LIMIT,
+        new Date(),
+      ),
     ),
     readProgramData([], (db) =>
-      listClosedProgramsByDeadlineMonth(db, parsedYear, parsedMonth, DEADLINE_CLOSED_PAGE_LIMIT, new Date())
-    )
+      listClosedProgramsByDeadlineMonth(
+        db,
+        parsedYear,
+        parsedMonth,
+        DEADLINE_CLOSED_PAGE_LIMIT,
+        new Date(),
+      ),
+    ),
   ]);
 
   return (
@@ -62,12 +80,15 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
             {year}년 {month}월 마감 창업지원금
           </h1>
           <p className="mt-3 leading-7 text-slate-600">
-            해당 월에 신청 접수가 끝나는 공고를 마감일 기준으로 정리했습니다. 이미 마감된 공고도 기록으로 유지합니다.
+            해당 월에 신청 접수가 끝나는 공고를 마감일 기준으로 정리했습니다.
+            이미 마감된 공고도 기록으로 유지합니다.
           </p>
         </header>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {activePrograms.length > 0 ? (
-            activePrograms.map((program) => <ProgramCard key={program.id} program={program} />)
+            activePrograms.map((program) => (
+              <ProgramCard key={program.id} program={program} />
+            ))
           ) : (
             <EmptyState
               title="해당 월 마감 공고가 없습니다"
@@ -79,7 +100,9 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
           <section className="mt-10" aria-label="마감 공고">
             <h2 className="text-lg font-semibold text-ink">마감 기록</h2>
             <div className="mt-3 grid gap-4 md:grid-cols-2">
-              {closedPrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+              {closedPrograms.map((program) => (
+                <ProgramCard key={program.id} program={program} />
+              ))}
             </div>
           </section>
         ) : null}
@@ -89,5 +112,12 @@ export default async function DeadlinePage({ params }: DeadlinePageProps) {
 }
 
 function isValidDeadlineParams(year: number, month: number) {
-  return Number.isInteger(year) && Number.isInteger(month) && year >= 2020 && year <= 2100 && month >= 1 && month <= 12;
+  return (
+    Number.isInteger(year) &&
+    Number.isInteger(month) &&
+    year >= 2020 &&
+    year <= 2100 &&
+    month >= 1 &&
+    month <= 12
+  );
 }

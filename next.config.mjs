@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
   serverExternalPackages: ["@napi-rs/canvas", "pdf-parse", "pdfjs-dist"],

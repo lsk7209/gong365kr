@@ -1,7 +1,8 @@
 import type { EventStatus } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_SUMMARY = "이벤트 상세 내용은 기업마당 또는 출처 페이지에서 확인할 수 있습니다.";
+const DEFAULT_SUMMARY =
+  "이벤트 상세 내용은 기업마당 또는 출처 페이지에서 확인할 수 있습니다.";
 const DEFAULT_ORG = "출처 기관 확인 필요";
 const DEFAULT_TYPE = "이벤트";
 const DEFAULT_AREA = "전국";
@@ -31,8 +32,13 @@ export type EventListItem = {
   lastSyncedAt: Date;
 };
 
-export function getEventSummary(event: Pick<EventListItem, "summaryShort">) {
-  return event.summaryShort ?? DEFAULT_SUMMARY;
+export function getEventSummary(
+  event: Pick<EventListItem, "summaryShort" | "eventType" | "areaName">,
+) {
+  if (event.summaryShort) return event.summaryShort;
+  const type = getEventType(event);
+  const area = getEventArea(event);
+  return `${area} ${type} 행사 공고입니다. 자세한 사항은 원문에서 확인하세요.`;
 }
 
 export function getEventOrg(event: Pick<EventListItem, "originOrg">) {
@@ -47,12 +53,17 @@ export function getEventArea(event: Pick<EventListItem, "areaName">) {
   return event.areaName ?? DEFAULT_AREA;
 }
 
-export function isEventClosed(event: Pick<EventListItem, "eventEnd" | "status">, now = new Date()) {
+export function isEventClosed(
+  event: Pick<EventListItem, "eventEnd" | "status">,
+  now = new Date(),
+) {
   if (event.status === "closed") {
     return true;
   }
 
-  return Boolean(event.eventEnd && endOfDay(event.eventEnd).getTime() < now.getTime());
+  return Boolean(
+    event.eventEnd && endOfDay(event.eventEnd).getTime() < now.getTime(),
+  );
 }
 
 export function formatEventDate(date: Date | null) {
@@ -64,7 +75,7 @@ export function formatEventDate(date: Date | null) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    timeZone: "Asia/Seoul"
+    timeZone: "Asia/Seoul",
   }).format(date);
 }
 
@@ -83,7 +94,10 @@ export function formatEventPeriod(start: Date | null, end: Date | null) {
   return formatEventDate(start ?? end);
 }
 
-export function formatEventDeadline(event: Pick<EventListItem, "receptionEnd" | "eventEnd" | "status">, now = new Date()) {
+export function formatEventDeadline(
+  event: Pick<EventListItem, "receptionEnd" | "eventEnd" | "status">,
+  now = new Date(),
+) {
   if (isEventClosed({ eventEnd: event.eventEnd, status: event.status }, now)) {
     return "행사 종료";
   }
@@ -114,5 +128,15 @@ function startOfDay(date: Date) {
 }
 
 function endOfDay(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
 }

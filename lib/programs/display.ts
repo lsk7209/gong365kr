@@ -4,7 +4,16 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_CATEGORY = "지원사업";
 const DEFAULT_SUMMARY = "상세 내용은 원문 공고에서 확인할 수 있습니다.";
 const DEFAULT_AGENCY = "공고 기관 확인 필요";
-export const PROGRAM_CATEGORY_LABELS = ["창업", "금융", "기술", "인력", "수출", "내수", "경영", "기타"] as const;
+export const PROGRAM_CATEGORY_LABELS = [
+  "창업",
+  "금융",
+  "기술",
+  "인력",
+  "수출",
+  "내수",
+  "경영",
+  "기타",
+] as const;
 
 export type ProgramListItem = {
   id: number;
@@ -20,31 +29,54 @@ export type ProgramListItem = {
   rawUrl: string;
 };
 
-export function getProgramCategory(program: Pick<ProgramListItem, "categoryCode">) {
-  return isKnownProgramCategory(program.categoryCode) ? program.categoryCode : DEFAULT_CATEGORY;
+export function getProgramCategory(
+  program: Pick<ProgramListItem, "categoryCode">,
+) {
+  return isKnownProgramCategory(program.categoryCode)
+    ? program.categoryCode
+    : DEFAULT_CATEGORY;
 }
 
-export function isKnownProgramCategory(value: string | null | undefined): value is (typeof PROGRAM_CATEGORY_LABELS)[number] {
-  return PROGRAM_CATEGORY_LABELS.includes(value as (typeof PROGRAM_CATEGORY_LABELS)[number]);
+export function isKnownProgramCategory(
+  value: string | null | undefined,
+): value is (typeof PROGRAM_CATEGORY_LABELS)[number] {
+  return PROGRAM_CATEGORY_LABELS.includes(
+    value as (typeof PROGRAM_CATEGORY_LABELS)[number],
+  );
 }
 
-export function getProgramSummary(program: Pick<ProgramListItem, "summaryShort">) {
-  return program.summaryShort ?? DEFAULT_SUMMARY;
+export function getProgramSummary(
+  program: Pick<ProgramListItem, "summaryShort" | "categoryCode">,
+) {
+  if (program.summaryShort) return program.summaryShort;
+  const category = getProgramCategory(program);
+  return `${category} 분야 지원사업 공고입니다. 자세한 사항은 원문에서 확인하세요.`;
 }
 
-export function getProgramAgency(program: Pick<ProgramListItem, "agency" | "executor">) {
+export function getProgramAgency(
+  program: Pick<ProgramListItem, "agency" | "executor">,
+) {
   return program.executor ?? program.agency ?? DEFAULT_AGENCY;
 }
 
-export function isProgramClosed(program: Pick<ProgramListItem, "applicationEnd" | "status">, now = new Date()) {
+export function isProgramClosed(
+  program: Pick<ProgramListItem, "applicationEnd" | "status">,
+  now = new Date(),
+) {
   if (program.status === "closed") {
     return true;
   }
 
-  return Boolean(program.applicationEnd && startOfDay(program.applicationEnd).getTime() < startOfDay(now).getTime());
+  return Boolean(
+    program.applicationEnd &&
+    startOfDay(program.applicationEnd).getTime() < startOfDay(now).getTime(),
+  );
 }
 
-export function formatDeadline(program: Pick<ProgramListItem, "applicationEnd" | "status">, now = new Date()) {
+export function formatDeadline(
+  program: Pick<ProgramListItem, "applicationEnd" | "status">,
+  now = new Date(),
+) {
   if (isProgramClosed(program, now)) {
     return "마감";
   }
@@ -73,7 +105,7 @@ export function formatDate(date: Date | null) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    timeZone: "Asia/Seoul"
+    timeZone: "Asia/Seoul",
   }).format(date);
 }
 

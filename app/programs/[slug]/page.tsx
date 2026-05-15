@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: ProgramDetailPageProps) {
 
   return {
     title: `${program.title} | ${getSiteName()}`,
-    description: description.slice(0, 80),
+    description: description.slice(0, 120),
     alternates: {
       canonical: `/programs/${program.slug}`,
     },
@@ -89,6 +89,7 @@ export default async function ProgramDetailPage({
       <article className="mx-auto max-w-4xl px-4 py-12">
         <ProgramJsonLd program={program} />
         <FaqPageJsonLd program={program} />
+        <BreadcrumbJsonLd program={program} />
         <GaContentComplete
           contentType="program"
           title={program.title}
@@ -345,6 +346,33 @@ function FaqPageJsonLd({ program }: { program: ProgramListItem }) {
       },
     ],
   };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+function BreadcrumbJsonLd({ program }: { program: ProgramListItem }) {
+  const siteUrl = getSiteUrl();
+  const pageUrl = `${siteUrl}/programs/${program.slug}`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "지원사업 공고",
+        item: `${siteUrl}/programs`,
+      },
+      { "@type": "ListItem", position: 3, name: program.title, item: pageUrl },
+    ],
+  };
+
   return (
     <script
       type="application/ld+json"

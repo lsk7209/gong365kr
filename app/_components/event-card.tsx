@@ -7,7 +7,7 @@ import {
   getEventSummary,
   getEventType,
   isEventClosed,
-  type EventListItem
+  type EventListItem,
 } from "@/lib/events/display";
 import { TrackableAnchor } from "@/app/_components/trackable-anchor";
 import { TrackableLink } from "@/app/_components/trackable-link";
@@ -24,9 +24,14 @@ export function EventCard({ event }: EventCardProps) {
     : "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-signal";
 
   return (
-    <article className="rounded-lg border border-line bg-white p-5 shadow-panel">
+    <article
+      className="rounded-lg border border-line bg-white p-5 shadow-panel"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "0 200px" }}
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-ink">{getEventType(event)}</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-ink">
+          {getEventType(event)}
+        </span>
         <span className={deadlineClassName}>
           <CalendarDays size={14} aria-hidden />
           {formatEventDeadline(event)}
@@ -42,7 +47,9 @@ export function EventCard({ event }: EventCardProps) {
           {event.title}
         </TrackableLink>
       </h2>
-      <p className="mt-3 text-sm leading-6 text-slate-600">{getEventSummary(event)}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        {getEventSummary(event)}
+      </p>
       <div className="mt-4 flex items-center gap-2 text-sm text-slate-700">
         <MapPin size={16} className="shrink-0 text-brand" aria-hidden />
         <span>
@@ -50,7 +57,9 @@ export function EventCard({ event }: EventCardProps) {
         </span>
       </div>
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 text-sm">
-        <span className="text-slate-500">{formatEventPeriod(event.eventStart, event.eventEnd)}</span>
+        <span className="text-slate-500">
+          {formatEventPeriod(event.eventStart, event.eventEnd)}
+        </span>
         <div className="inline-flex items-center gap-1 text-sm font-semibold">
           {canApply ? (
             <TrackableAnchor
@@ -59,7 +68,11 @@ export function EventCard({ event }: EventCardProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-brand"
               label={`${event.slug}-external`}
-              eventParams={{ content_type: "event", content_id: event.id, action: "open_external" }}
+              eventParams={{
+                content_type: "event",
+                content_id: event.id,
+                action: "open_external",
+              }}
             >
               원문 이동
             </TrackableAnchor>
@@ -72,4 +85,3 @@ export function EventCard({ event }: EventCardProps) {
     </article>
   );
 }
-
