@@ -49,6 +49,19 @@ export function extractKstartupItems(payload: unknown): {
 } {
   if (!isRecord(payload)) return { items: [], totalCount: 0 };
 
+  // Current API format: { currentCount: N, data: [...] }
+  if (Array.isArray(payload.data)) {
+    const items = payload.data.filter(isRecord);
+    const totalCount =
+      typeof payload.totalCount === "number"
+        ? payload.totalCount
+        : typeof payload.currentCount === "number"
+          ? payload.currentCount
+          : items.length;
+    return { items, totalCount };
+  }
+
+  // Fallback: response.body.items
   const body = isRecord(payload.response)
     ? payload.response.body
     : (payload.body ?? payload);

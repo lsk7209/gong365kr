@@ -6,29 +6,29 @@ import { KSTARTUP_CATEGORY_MAP } from "./constants";
 import type { KstartupRawItem } from "./types";
 
 const KSTARTUP_DETAIL_BASE =
-  "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?pbancSn=";
+  "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=";
 
 export function normalizeKstartupItem(
   item: KstartupRawItem,
   now = new Date(),
 ): ProgramUpsertInput | null {
-  const pbancSn = readString(item, ["pbancSn"]);
-  const title = readString(item, ["pbancNm"]);
+  const pbancSn = readString(item, ["pbanc_sn"]);
+  const title = readString(item, ["biz_pbanc_nm"]);
 
   if (!pbancSn || !title) return null;
 
   const pblancId = `kstartup-${pbancSn}`;
   const rawUrl =
-    readString(item, ["pbancUrl"]) ?? `${KSTARTUP_DETAIL_BASE}${pbancSn}`;
-  const agency = readString(item, ["jrsdInsttNm"]);
-  const executor = readString(item, ["excInsttNm"]);
-  const categoryCode = normalizeCategory(
-    readString(item, ["bsnsCatgNm", "bsnsCatgLclasNm"]),
-  );
+    readString(item, ["detl_pg_url"]) ?? `${KSTARTUP_DETAIL_BASE}${pbancSn}`;
+  const agency = readString(item, ["pbanc_ntrp_nm"]);
+  const executor = readString(item, ["biz_prch_dprt_nm"]);
+  const categoryCode = normalizeCategory(readString(item, ["supt_biz_clsfc"]));
   const applicationStart = parseKstartupDate(
-    readString(item, ["pbancBgngYmd"]),
+    readString(item, ["pbanc_rcpt_bgng_dt"]),
   );
-  const applicationEnd = parseKstartupDate(readString(item, ["pbancEndYmd"]));
+  const applicationEnd = parseKstartupDate(
+    readString(item, ["pbanc_rcpt_end_dt"]),
+  );
   const createdAt = applicationStart ?? now;
   const year =
     applicationStart?.getFullYear() ??
@@ -58,14 +58,14 @@ export function normalizeKstartupItem(
 }
 
 function buildSummary(item: KstartupRawItem): string | null {
-  const suprtCn = readString(item, ["suprtCn"]);
-  const trgtCn = readString(item, ["trgtCn"]);
-  const reqstMthCn = readString(item, ["reqstMthCn"]);
+  const content = readString(item, ["pbanc_ctnt"]);
+  const target = readString(item, ["aply_trgt_ctnt"]);
+  const region = readString(item, ["supt_regin"]);
 
   const parts: string[] = [];
-  if (suprtCn) parts.push(suprtCn);
-  if (trgtCn) parts.push(`[지원대상] ${trgtCn}`);
-  if (reqstMthCn) parts.push(`[신청방법] ${reqstMthCn}`);
+  if (content) parts.push(content);
+  if (target) parts.push(`[지원대상] ${target}`);
+  if (region) parts.push(`[지역] ${region}`);
 
   const combined = parts.join(" ").replace(/\s+/g, " ").trim();
   return combined || null;
