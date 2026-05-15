@@ -1,4 +1,15 @@
-import { and, asc, count, desc, eq, isNotNull, like, not, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  isNotNull,
+  like,
+  not,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { getDb } from "@/db";
 import { events } from "@/db/schema";
 import type { EventListItem } from "./display";
@@ -20,7 +31,7 @@ export async function listUpcomingEvents(
   db: DbClient,
   limit: number,
   now = new Date(),
-  filters: EventFilterInput = {}
+  filters: EventFilterInput = {},
 ): Promise<EventListItem[]> {
   return listOpenEvents(db, limit, filters, now);
 }
@@ -29,17 +40,24 @@ export async function listOpenEvents(
   db: DbClient,
   limit: number,
   filters: EventFilterInput = {},
-  now = new Date()
+  now = new Date(),
 ): Promise<EventListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
     .select(eventListFields)
     .from(events)
-    .where(and(eventFilterCondition(filters), not(isEventClosedCondition(nowSeconds))))
+    .where(
+      and(
+        eventFilterCondition(filters),
+        not(isEventClosedCondition(nowSeconds)),
+      ),
+    )
     .orderBy(
-      asc(sql`coalesce(${events.eventStart}, ${events.receptionEnd}, ${events.eventEnd}, ${events.lastSyncedAt})`),
-      desc(events.lastSyncedAt)
+      asc(
+        sql`coalesce(${events.eventStart}, ${events.receptionEnd}, ${events.eventEnd}, ${events.lastSyncedAt})`,
+      ),
+      desc(events.lastSyncedAt),
     )
     .limit(limit);
 }
@@ -48,17 +66,21 @@ export async function listClosedEvents(
   db: DbClient,
   limit: number,
   now = new Date(),
-  filters: EventFilterInput = {}
+  filters: EventFilterInput = {},
 ): Promise<EventListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
     .select(eventListFields)
     .from(events)
-    .where(and(eventFilterCondition(filters), isEventClosedCondition(nowSeconds)))
+    .where(
+      and(eventFilterCondition(filters), isEventClosedCondition(nowSeconds)),
+    )
     .orderBy(
-      asc(sql`coalesce(${events.eventEnd}, ${events.eventStart}, ${events.lastSyncedAt})`),
-      desc(events.lastSyncedAt)
+      asc(
+        sql`coalesce(${events.eventEnd}, ${events.eventStart}, ${events.lastSyncedAt})`,
+      ),
+      desc(events.lastSyncedAt),
     )
     .limit(limit);
 }
@@ -66,7 +88,7 @@ export async function listClosedEvents(
 export async function listRecentEvents(
   db: DbClient,
   limit: number,
-  now = new Date()
+  now = new Date(),
 ): Promise<EventListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
@@ -78,18 +100,28 @@ export async function listRecentEvents(
     .limit(limit);
 }
 
-export async function getEventBySlug(db: DbClient, slug: string): Promise<EventListItem | null> {
-  const [event] = await db.select(eventListFields).from(events).where(eq(events.slug, slug)).limit(1);
+export async function getEventBySlug(
+  db: DbClient,
+  slug: string,
+): Promise<EventListItem | null> {
+  const [event] = await db
+    .select(eventListFields)
+    .from(events)
+    .where(eq(events.slug, slug))
+    .limit(1);
 
   return event ?? null;
 }
 
-export async function listEventAreas(db: DbClient, limit = 20): Promise<EventFacet[]> {
+export async function listEventAreas(
+  db: DbClient,
+  limit = 20,
+): Promise<EventFacet[]> {
   const areaCount = count();
   const rows = await db
     .select({
       label: events.areaName,
-      count: areaCount
+      count: areaCount,
     })
     .from(events)
     .where(isNotNull(events.areaName))
@@ -98,19 +130,24 @@ export async function listEventAreas(db: DbClient, limit = 20): Promise<EventFac
     .limit(limit);
 
   return rows
-    .filter((row): row is { label: string; count: number } => Boolean(row.label))
+    .filter((row): row is { label: string; count: number } =>
+      Boolean(row.label),
+    )
     .map((row) => ({
       label: row.label,
-      count: row.count
+      count: row.count,
     }));
 }
 
-export async function listEventTypes(db: DbClient, limit = 20): Promise<EventFacet[]> {
+export async function listEventTypes(
+  db: DbClient,
+  limit = 20,
+): Promise<EventFacet[]> {
   const typeCount = count();
   const rows = await db
     .select({
       label: events.eventType,
-      count: typeCount
+      count: typeCount,
     })
     .from(events)
     .where(isNotNull(events.eventType))
@@ -119,10 +156,12 @@ export async function listEventTypes(db: DbClient, limit = 20): Promise<EventFac
     .limit(limit);
 
   return rows
-    .filter((row): row is { label: string; count: number } => Boolean(row.label))
+    .filter((row): row is { label: string; count: number } =>
+      Boolean(row.label),
+    )
     .map((row) => ({
       label: row.label,
-      count: row.count
+      count: row.count,
     }));
 }
 
@@ -130,7 +169,7 @@ export async function listEventSlugsForSitemap(db: DbClient, limit: number) {
   return db
     .select({
       slug: events.slug,
-      lastModified: events.lastSyncedAt
+      lastModified: events.lastSyncedAt,
     })
     .from(events)
     .orderBy(desc(events.lastSyncedAt))
@@ -159,14 +198,14 @@ const eventListFields = {
   printFileUrl: events.printFileUrl,
   printFileName: events.printFileName,
   createdAt: events.createdAt,
-  lastSyncedAt: events.lastSyncedAt
+  lastSyncedAt: events.lastSyncedAt,
 };
 
 function eventFilterCondition(filters: EventFilterInput) {
   const conditions = [
     filters.areaName ? eq(events.areaName, filters.areaName) : undefined,
     filters.eventType ? eq(events.eventType, filters.eventType) : undefined,
-    filters.keyword ? eventKeywordCondition(filters.keyword) : undefined
+    filters.keyword ? eventKeywordCondition(filters.keyword) : undefined,
   ].filter(Boolean);
 
   return conditions.length > 0 ? and(...conditions) : undefined;
@@ -180,13 +219,10 @@ function eventKeywordCondition(keyword: string) {
     like(events.summaryShort, pattern),
     like(events.originOrg, pattern),
     like(events.areaName, pattern),
-    like(events.eventType, pattern)
+    like(events.eventType, pattern),
   );
 }
 
 function isEventClosedCondition(nowSeconds: number) {
-  return or(
-    sql`${events.status} = 'closed'`,
-    and(isNotNull(events.eventEnd), sql`${events.eventEnd} + 86399 < ${nowSeconds}`)
-  );
+  return sql`(${events.status} = 'closed' OR (${events.eventEnd} IS NOT NULL AND ${events.eventEnd} + 86399 < ${nowSeconds}))`;
 }
