@@ -17,6 +17,7 @@ import { BATCH_16 } from "@/lib/blog/batches/batch-16";
 import { BATCH_17 } from "@/lib/blog/batches/batch-17";
 import { BATCH_18 } from "@/lib/blog/batches/batch-18";
 import { BATCH_19 } from "@/lib/blog/batches/batch-19";
+import { BATCH_20 } from "@/lib/blog/batches/batch-20";
 
 const QUALITY_GATED_POSTS = [
   ...BATCH_03,
@@ -36,6 +37,7 @@ const QUALITY_GATED_POSTS = [
   ...BATCH_17,
   ...BATCH_18,
   ...BATCH_19,
+  ...BATCH_20,
 ];
 
 describe("Blog quality gates", () => {
