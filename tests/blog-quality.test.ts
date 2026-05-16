@@ -4,8 +4,15 @@ import { BATCH_03 } from "@/lib/blog/batches/batch-03";
 import { BATCH_04 } from "@/lib/blog/batches/batch-04";
 import { BATCH_05 } from "@/lib/blog/batches/batch-05";
 import { BATCH_06 } from "@/lib/blog/batches/batch-06";
+import { BATCH_07 } from "@/lib/blog/batches/batch-07";
 
-const QUALITY_GATED_POSTS = [...BATCH_03, ...BATCH_04, ...BATCH_05, ...BATCH_06];
+const QUALITY_GATED_POSTS = [
+  ...BATCH_03,
+  ...BATCH_04,
+  ...BATCH_05,
+  ...BATCH_06,
+  ...BATCH_07,
+];
 
 describe("Blog quality gates", () => {
   it("keeps quality-gated posts at score 90 or higher", () => {
