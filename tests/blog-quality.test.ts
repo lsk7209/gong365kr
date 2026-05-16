@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { BATCH_03 } from "@/lib/blog/batches/batch-03";
 import { BATCH_04 } from "@/lib/blog/batches/batch-04";
+import { BATCH_05 } from "@/lib/blog/batches/batch-05";
 
-const QUALITY_GATED_POSTS = [...BATCH_03, ...BATCH_04];
+const QUALITY_GATED_POSTS = [...BATCH_03, ...BATCH_04, ...BATCH_05];
 
 describe("Blog quality gates", () => {
   it("keeps quality-gated posts at score 90 or higher", () => {

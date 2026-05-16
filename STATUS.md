@@ -1,43 +1,27 @@
 # Status | 마지막: 2026-05-16
 ## 현재 작업
-- 블로그 글 300개 생성 진행 중 (현재 46개 완료: batch-01 10개 + batch-02 16개 + batch-03 10개 + batch-04 10개)
-- batch-04 10개 글 생성·검증·푸시·배포 확인 완료
+- 블로그 글 300개 생성 진행 중: 56/300 완료
+- batch-05 10개 생성·검증 완료, 5시간 간격 예약 반영
 
-## 최근 변경 (최근 5개)
-- 05-16: batch-04.ts 생성·검증·배포 확인 (10개 글, 각 3출처·90점 이상·본문 3500자 이상) — 총 46개
-- 05-16: batch-03.ts 생성·검증·배포 확인 (10개 글, 각 3출처·90점 이상·본문 3500자 이상) — 총 36개
-- 05-16: 블로그 26개 글 5시간 간격 예약 발행 배포 확인 (마지막 예약 2026-05-21 05:00 KST)
-- 05-16: batch-02.ts 생성·검증·커밋·푸시·배포 확인 (16개 글) — 총 26개
-- 05-16: posts.ts 배치 구조로 전환 (batch-01.ts 생성, posts.ts aggregator화)
-
-## 완료된 최적화
-- Phase 2 SEO: OG/BreadcrumbList/JSON-LD 전 페이지 완료
-- Phase 3 속도: content-visibility, Clarity, next.config 완료
-- Phase 4 컨텐츠: RelatedEventList, summaryShort 개선 완료
-- Phase 5 AdSense: adsense-unit.tsx 준비 완료 (승인 대기)
+## 최근 변경 (최근 5개만)
+- 05-16: batch-05.ts 추가, 총 56개 예약글로 확장
+- 05-16: batch-04.ts 생성·검증·배포 확인, 총 46개
+- 05-16: batch-03.ts 생성·검증·배포 확인, 총 36개
+- 05-16: 26개 글 5시간 간격 예약 발행 로직 배포 확인
+- 05-16: posts.ts 배치 구조로 전환
 
 ## TODO
-- [x] batch-02.ts 커밋
-- [x] batch-02.ts 푸시
-- [x] Vercel 배포 확인
-- [x] 5시간 간격 예약 발행 로직 적용
-- [x] batch-03 10개 생성·검증
-- [x] batch-04 10개 생성·검증
-- [ ] batch-05 ~ batch-10 순차 생성 (목표: 총 300개, 현재 46개)
-  - 다음 주제: 창업 회계, 노무, 특허, 정부지원금 정산, 투자유치, IR 자료, 폐업·재기, 지역별 후속 글 등
-- [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정 → 광고 단위 배치
-- [ ] GA4 콘솔에서 program_apply_clicked·event_apply_clicked 전환 이벤트 표시 (수동)
-- [ ] GSC 2-4주 후 재분석 → CTR 낮은 페이지 개선
+- [ ] batch-06 이후 계속 생성, 목표 300개
+- [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정
+- [ ] GA4 전환 이벤트 콘솔 확인
+- [ ] GSC 2-4주 데이터 누적 후 CTR 낮은 페이지 개선
 
 ## 결정사항
-- meta_priority: naver → description 80자 적용 (B-03)
-- 블로그 배치 구조: batch-01(10개), batch-02~10(30개씩) → posts.ts에서 합산
-- 품질 기준: 미검증 통계 수치 금지, 공식 프로그램 금액만 사용
-- 예약 발행: 2026-05-16 00:00 KST부터 글마다 5시간 간격, 예약 전 글은 목록·상세·sitemap 제외
-- batch-03부터 researchSources 3개, qualityScore 90 이상, 본문 3500자 이상 테스트 적용
+- 예약 발행: 2026-05-16 00:00 KST부터 글마다 5시간 간격
+- 비공개 예약글: 목록·상세·sitemap·검색 제출에서 제외
+- 품질 기준: batch-03부터 출처 3개, qualityScore 90 이상, 본문 3500자 이상
 
 ## 주의
-- 마지막 예약글: 2026-05-25 09:00 KST
-- batch-02.ts 배포 확인 URL: /blog/yebichangupin-paeikiji-wanjeon-gaideu-2026
-- 확인된 공식 금액: 예비창업패키지 최대 1억, 초기창업패키지 최대 1억(딥테크 1.5억), 창업도약패키지 최대 2억, TIPS 최대 5억 R&D, 청년창업사관학교 최대 1억
-- Vercel 배포: git push origin main만 사용 (vercel CLI 금지)
+- 마지막 예약글: 2026-05-27 11:00 KST
+- Vercel 배포는 git push origin main만 사용
+- .omc/는 로컬 미추적 파일이므로 커밋 제외
