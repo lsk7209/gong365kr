@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Tag } from "lucide-react";
-import { BLOG_POSTS } from "@/lib/blog/posts";
+import { getPublishedBlogPosts } from "@/lib/blog/posts";
 import { getSiteName, getSiteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  const sorted = [...BLOG_POSTS].sort(
+  const sorted = getPublishedBlogPosts().sort(
     (a, b) =>
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );

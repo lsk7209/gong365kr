@@ -4,7 +4,7 @@ import { readEventData } from "@/lib/events/page-data";
 import { listEventSlugsForSitemap } from "@/lib/events/query-repository";
 import { readProgramData } from "@/lib/programs/page-data";
 import { listProgramSlugsForSitemap } from "@/lib/programs/query-repository";
-import { getAllBlogSlugs } from "@/lib/blog/posts";
+import { getPublishedBlogSlugs } from "@/lib/blog/posts";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_SITEMAP_SCOPE = "https://www.googleapis.com/auth/webmasters";
@@ -245,7 +245,7 @@ async function createSubmissionUrls(siteUrl: string) {
     paths.add(`/events/${row.slug}`);
   }
 
-  for (const slug of getAllBlogSlugs()) {
+  for (const slug of getPublishedBlogSlugs()) {
     paths.add(`/blog/${slug}`);
   }
 

@@ -4,10 +4,29 @@ import { BATCH_02 } from "./batches/batch-02";
 
 export const BLOG_POSTS: BlogPost[] = [...BATCH_01, ...BATCH_02];
 
+export function getPublishedBlogPosts(referenceDate = new Date()): BlogPost[] {
+  return BLOG_POSTS.filter((post) => isBlogPostPublished(post, referenceDate));
+}
+
 export function getBlogPost(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((p) => p.slug === slug);
 }
 
-export function getAllBlogSlugs(): string[] {
-  return BLOG_POSTS.map((p) => p.slug);
+export function getPublishedBlogPost(
+  slug: string,
+  referenceDate = new Date(),
+): BlogPost | undefined {
+  const post = getBlogPost(slug);
+  return post && isBlogPostPublished(post, referenceDate) ? post : undefined;
+}
+
+export function getPublishedBlogSlugs(referenceDate = new Date()): string[] {
+  return getPublishedBlogPosts(referenceDate).map((p) => p.slug);
+}
+
+export function isBlogPostPublished(
+  post: BlogPost,
+  referenceDate = new Date(),
+) {
+  return new Date(post.publishedAt).getTime() <= referenceDate.getTime();
 }

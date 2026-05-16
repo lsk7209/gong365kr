@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Tag, CalendarDays } from "lucide-react";
-import { getBlogPost, getAllBlogSlugs } from "@/lib/blog/posts";
+import { getPublishedBlogPost, getPublishedBlogSlugs } from "@/lib/blog/posts";
 import { getSiteName, getSiteUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return getAllBlogSlugs().map((slug) => ({ slug }));
+  return getPublishedBlogSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPost(slug);
+  const post = getPublishedBlogPost(slug);
   if (!post) return {};
 
   const url = `${getSiteUrl()}/blog/${slug}`;
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = getBlogPost(slug);
+  const post = getPublishedBlogPost(slug);
   if (!post) notFound();
 
   const siteUrl = getSiteUrl();

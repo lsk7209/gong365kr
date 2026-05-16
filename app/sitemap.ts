@@ -2,7 +2,7 @@
 import { getDb } from "@/db";
 import { hasRequiredEnv } from "@/lib/env";
 import { listEventSlugsForSitemap } from "@/lib/events/query-repository";
-import { BLOG_POSTS } from "@/lib/blog/posts";
+import { getPublishedBlogPosts } from "@/lib/blog/posts";
 import { listProgramSlugsForSitemap } from "@/lib/programs/query-repository";
 import { regionRows } from "@/lib/regions";
 import { getSeoulDate } from "@/lib/time/seoul";
@@ -71,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 
 function readBlogSitemapUrls(siteUrl: string): MetadataRoute.Sitemap {
-  return BLOG_POSTS.map((post) => ({
+  return getPublishedBlogPosts().map((post) => ({
     url: `${siteUrl}/blog/${post.slug}`,
     lastModified: new Date(post.publishedAt),
     changeFrequency: "monthly" as const,
