@@ -21,6 +21,7 @@ const adsenseClient =
   defaultAdsensePublisherId;
 const adsenseApproved = process.env.NEXT_PUBLIC_ADSENSE_APPROVED === "true";
 const gaId = process.env.NEXT_PUBLIC_GA_ID ?? defaultGaId;
+const clarityEnabled = process.env.NEXT_PUBLIC_CLARITY_ENABLED === "true";
 const googleSiteVerification =
   process.env.GOOGLE_SITE_VERIFICATION ?? defaultGoogleSiteVerification;
 const naverSiteVerification =
@@ -106,7 +107,7 @@ export default function RootLayout({
             </Script>
           </>
         ) : null}
-        {process.env.NEXT_PUBLIC_CLARITY_ID ? (
+        {clarityEnabled && process.env.NEXT_PUBLIC_CLARITY_ID ? (
           <Script
             src={`https://www.clarity.ms/tag/${process.env.NEXT_PUBLIC_CLARITY_ID}`}
             strategy="lazyOnload"

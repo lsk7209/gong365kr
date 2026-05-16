@@ -1,10 +1,10 @@
 # Status | 마지막: 2026-05-16
 ## 현재 작업
-- 사이트 최적화 진행 중: 페르소나, SEO/AEO, GA4, AdSense, GSC/IndexNow 배포 검증
+- 사이트 최적화 진행 중: SEO 100 유지, 서드파티 스크립트 게이트 배포 검증
 - 블로그 글 300개 생성은 256/300 완료 상태에서 일시 중단
 
 ## 최근 변경 (최근 5개만)
-- 05-16: SEO/GA4/AdSense 준비 최적화, GSC sitemap·IndexNow 제출 확인
+- 05-16: SEO/GA4/AdSense·Clarity 게이트 최적화, GSC sitemap·IndexNow 제출 확인
 - 05-16: batch-25.ts 추가·검증·배포 확인, 총 256개 예약글로 확장
 - 05-16: batch-24.ts 추가·배포 확인, 총 246개 예약글로 확장
 - 05-16: batch-23.ts 추가·배포 확인, 총 236개 예약글로 확장
