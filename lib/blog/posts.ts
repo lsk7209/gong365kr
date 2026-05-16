@@ -23,6 +23,7 @@ import { BATCH_21 } from "./batches/batch-21";
 import { BATCH_22 } from "./batches/batch-22";
 import { BATCH_23 } from "./batches/batch-23";
 import { BATCH_24 } from "./batches/batch-24";
+import { BATCH_25 } from "./batches/batch-25";
 
 export const BLOG_POSTS: BlogPost[] = [
   ...BATCH_01,
@@ -49,6 +50,7 @@ export const BLOG_POSTS: BlogPost[] = [
   ...BATCH_22,
   ...BATCH_23,
   ...BATCH_24,
+  ...BATCH_25,
 ];
 
 export function getPublishedBlogPosts(referenceDate = new Date()): BlogPost[] {
