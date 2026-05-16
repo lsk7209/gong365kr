@@ -18,10 +18,10 @@ describe("Blog schedule", () => {
     }
   });
 
-  it("sets the current last scheduled post to 2026-07-08 03:00 KST", () => {
+  it("sets the current last scheduled post to 2026-07-10 05:00 KST", () => {
     const lastPost = BLOG_POSTS.at(-1);
 
-    assert.equal(lastPost?.publishedAt, "2026-07-08T03:00:00+09:00");
+    assert.equal(lastPost?.publishedAt, "2026-07-10T05:00:00+09:00");
   });
 
   it("hides posts before their scheduled publish time", () => {
