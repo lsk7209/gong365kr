@@ -1,8 +1,9 @@
 import type { BlogPost } from "./types";
 import { BATCH_01 } from "./batches/batch-01";
 import { BATCH_02 } from "./batches/batch-02";
+import { BATCH_03 } from "./batches/batch-03";
 
-export const BLOG_POSTS: BlogPost[] = [...BATCH_01, ...BATCH_02];
+export const BLOG_POSTS: BlogPost[] = [...BATCH_01, ...BATCH_02, ...BATCH_03];
 
 export function getPublishedBlogPosts(referenceDate = new Date()): BlogPost[] {
   return BLOG_POSTS.filter((post) => isBlogPostPublished(post, referenceDate));

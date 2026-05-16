@@ -133,6 +133,38 @@ export default async function BlogPostPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
+        {post.researchSources && post.researchSources.length > 0 ? (
+          <section
+            aria-labelledby="research-sources"
+            className="mt-10 rounded-lg border border-line bg-slate-50 p-5"
+          >
+            <h2
+              id="research-sources"
+              className="text-base font-bold text-ink"
+            >
+              확인한 공식 출처
+            </h2>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+              {post.researchSources.map((source) => (
+                <li key={source.url}>
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-brand hover:underline"
+                  >
+                    {source.title}
+                  </a>
+                  <span className="text-slate-500">
+                    {" "}
+                    · {source.publisher} · 확인일 {source.checkedAt}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {/* 태그 */}
         <div className="mt-10 flex flex-wrap gap-2 border-t border-line pt-6">
           {post.tags.map((tag) => (
