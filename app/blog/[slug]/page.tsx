@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Tag, CalendarDays } from "lucide-react";
+import { BlogAdSlot } from "@/app/_components/blog-ad-slot";
+import { GaContentComplete } from "@/app/_components/ga-content-complete";
 import { getPublishedBlogPost, getPublishedBlogSlugs } from "@/lib/blog/posts";
 import { getSiteName, getSiteUrl } from "@/lib/site";
 
@@ -20,6 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.description,
+    authors: [{ name: getSiteName(), url: getSiteUrl() }],
+    keywords: post.tags,
     alternates: { canonical: `/blog/${slug}` },
     openGraph: {
       title: post.title,
@@ -29,6 +33,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: "ko_KR",
       type: "article",
       publishedTime: post.publishedAt,
+      authors: [getSiteName()],
+      tags: post.tags,
+      images: [
+        {
+          url: "/og-default.png",
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+      images: ["/og-default.png"],
     },
   };
 }
@@ -64,16 +84,27 @@ export default async function BlogPostPage({ params }: Props) {
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
+    mainEntityOfPage: `${siteUrl}/blog/${slug}`,
     headline: post.title,
     description: post.description,
     datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    inLanguage: "ko-KR",
     url: `${siteUrl}/blog/${slug}`,
+    image: [`${siteUrl}/og-default.png`],
+    articleSection: post.category,
+    author: {
+      "@type": "Organization",
+      name: siteName,
+      url: siteUrl,
+    },
     publisher: {
       "@type": "Organization",
       name: siteName,
       url: siteUrl,
     },
     keywords: post.tags.join(", "),
+    citation: post.researchSources?.map((source) => source.url) ?? [],
   };
 
   return (
@@ -86,6 +117,7 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
+      <GaContentComplete contentType="blog" title={post.title} id={post.slug} />
 
       <main className="mx-auto max-w-3xl px-4 py-10">
         {/* 브레드크럼 */}
@@ -127,11 +159,15 @@ export default async function BlogPostPage({ params }: Props) {
           </p>
         </header>
 
+        <BlogAdSlot position="top" />
+
         {/* 본문 */}
         <article
           className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-ink prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-li:text-slate-700"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        <BlogAdSlot position="middle" />
 
         {post.researchSources && post.researchSources.length > 0 ? (
           <section
@@ -176,6 +212,8 @@ export default async function BlogPostPage({ params }: Props) {
             </span>
           ))}
         </div>
+
+        <BlogAdSlot position="bottom" />
 
         {/* 목록으로 */}
         <div className="mt-8">

@@ -10,6 +10,8 @@ type AdsenseUnitProps = {
   className?: string;
 };
 
+const defaultAdsensePublisherId = "ca-pub-3050601904412736";
+
 declare global {
   interface Window {
     adsbygoogle: unknown[];
@@ -22,7 +24,10 @@ export function AdsenseUnit({
   className,
 }: AdsenseUnitProps) {
   const approved = process.env.NEXT_PUBLIC_ADSENSE_APPROVED === "true";
-  const pubId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID;
+  const pubId =
+    process.env.NEXT_PUBLIC_ADSENSE_PUB_ID ??
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT ??
+    defaultAdsensePublisherId;
 
   useEffect(() => {
     if (!approved || !pubId) return;

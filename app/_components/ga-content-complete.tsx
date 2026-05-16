@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { trackContentReadComplete } from "@/lib/analytics/gtag";
 
 type GaContentCompleteProps = {
-  contentType: "program" | "event";
+  contentType: "program" | "event" | "blog";
   title: string;
   id: string;
 };
@@ -27,4 +27,3 @@ export function GaContentComplete({ contentType, title, id }: GaContentCompleteP
 
   return null;
 }
-
