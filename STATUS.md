@@ -1,13 +1,14 @@
 # Status | 마지막: 2026-05-16
 ## 현재 작업
-- 블로그 글 품질 업그레이드 완료 → Vercel 배포 중
+- 블로그 글 300개 생성 진행 중 (현재 26개 완료: batch-01 10개 + batch-02 16개)
+- batch-03 생성 준비 중
 
 ## 최근 변경 (최근 5개)
+- 05-16: batch-02.ts 생성·검증·커밋 (16개 글) — 총 26개
+- 05-16: posts.ts 배치 구조로 전환 (batch-01.ts 생성, posts.ts aggregator화)
+- 05-16: 블로그 글 미검증 수치 전량 제거 (Post 1·2·4·6·9) → 품질 90점 목표
 - 05-16: 블로그 글 1,2,4,6,7,8번 고품질 콘텐츠로 업그레이드 (비교표·체크리스트·FAQ 포함)
 - 05-16: 블로그 메뉴 + 창업 관련 글 10개 추가 (lib/blog, app/blog)
-- 05-15: KSTARTUP_SERVICE_KEY Vercel env 등록 완료
-- 05-15: K-Startup 엔드포인트 수정 + 실제 필드명(pbanc_sn 등) 반영
-- 05-15: K-Startup API 연동 (lib/kstartup, sync-kstartup cron)
 
 ## 완료된 최적화
 - Phase 2 SEO: OG/BreadcrumbList/JSON-LD 전 페이지 완료
@@ -16,17 +17,20 @@
 - Phase 5 AdSense: adsense-unit.tsx 준비 완료 (승인 대기)
 
 ## TODO
-- [ ] **KSTARTUP_SERVICE_KEY Vercel env 등록** → 발급한 키 입력 후 redeploy
+- [x] batch-02.ts 커밋
+- [ ] batch-02.ts 푸시 후 Vercel 배포 확인
+- [ ] batch-03 ~ batch-10 순차 생성 (목표: 총 300개, 현재 26개)
+  - 다음 주제: 부산 창업 지원사업, 법인 설립 가이드, 창업 팀 구성, 창업 초기 세금, 창업 마케팅, 재도전 지원사업, 소셜벤처, 수출 바우처, 음식점 창업, AI·딥테크 등
 - [ ] AdSense 승인 후 NEXT_PUBLIC_ADSENSE_APPROVED=true 설정 → 광고 단위 배치
 - [ ] GA4 콘솔에서 program_apply_clicked·event_apply_clicked 전환 이벤트 표시 (수동)
-- [ ] GSC 2-4주 후 재분석 → 키워드 데이터 축적 후 CTR 낮은 페이지 개선
+- [ ] GSC 2-4주 후 재분석 → CTR 낮은 페이지 개선
 
 ## 결정사항
 - meta_priority: naver → description 80자 적용 (B-03)
-- llms 파일: 정적→동적 route 전환 (DB 실시간 반영)
-- cron-auth: Vercel 내부 cron은 x-vercel-cron 헤더로 허용, 외부 수동 호출은 CRON_SECRET 필요
+- 블로그 배치 구조: batch-01(10개), batch-02~10(30개씩) → posts.ts에서 합산
+- 품질 기준: 미검증 통계 수치 금지, 공식 프로그램 금액만 사용
 
 ## 주의
-- Vercel env 추가 후 redeploy 필요 (env만 추가하면 자동 재배포 안 됨)
-- vercel.json cron은 Vercel Pro 플랜 이상 필요
-- CRON_SECRET 없으면 외부 curl 수동 호출 불가 (scheduled 자동 실행에는 영향 없음)
+- batch-02.ts 로컬 빌드 OK, Vercel 배포는 푸시 후 확인 필요
+- 확인된 공식 금액: 예비창업패키지 최대 1억, 초기창업패키지 최대 1억(딥테크 1.5억), 창업도약패키지 최대 2억, TIPS 최대 5억 R&D, 청년창업사관학교 최대 1억
+- Vercel 배포: git push origin main만 사용 (vercel CLI 금지)
