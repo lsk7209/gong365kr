@@ -19,7 +19,6 @@ const adsenseClient =
   process.env.NEXT_PUBLIC_ADSENSE_PUB_ID ??
   process.env.NEXT_PUBLIC_ADSENSE_CLIENT ??
   defaultAdsensePublisherId;
-const adsenseApproved = process.env.NEXT_PUBLIC_ADSENSE_APPROVED === "true";
 const gaId = process.env.NEXT_PUBLIC_GA_ID ?? defaultGaId;
 const clarityEnabled = process.env.NEXT_PUBLIC_CLARITY_ENABLED === "true";
 const googleSiteVerification =
@@ -82,8 +81,9 @@ export default function RootLayout({
     <html lang="ko">
       <head />
       <body>
-        {adsenseApproved && adsenseClient ? (
+        {adsenseClient ? (
           <Script
+            id="adsense-loader"
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
             crossOrigin="anonymous"
