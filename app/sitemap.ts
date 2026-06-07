@@ -62,12 +62,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    ...readTrustPageSitemapUrls(siteUrl, effectiveLastModified),
     ...readRegionSitemapUrls(siteUrl, effectiveLastModified),
     ...readDeadlineSitemapUrls(siteUrl, effectiveLastModified),
     ...readBlogSitemapUrls(siteUrl),
     ...programUrls,
     ...eventUrls,
   ];
+}
+
+function readTrustPageSitemapUrls(
+  siteUrl: string,
+  lastModified: Date,
+): MetadataRoute.Sitemap {
+  return ["/about", "/contact", "/privacy", "/terms"].map((path) => ({
+    url: `${siteUrl}${path}`,
+    lastModified,
+    changeFrequency: "monthly" as const,
+    priority: 0.5,
+  }));
 }
 
 function readBlogSitemapUrls(siteUrl: string): MetadataRoute.Sitemap {

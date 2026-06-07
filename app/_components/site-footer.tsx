@@ -19,6 +19,15 @@ const FOOTER_LINK_GROUPS = [
       { href: "/llms.txt", label: "AI 인덱스" },
       { href: "/llms-full.txt", label: "AI 상세 인덱스" }
     ]
+  },
+  {
+    title: "운영",
+    links: [
+      { href: "/about", label: "소개" },
+      { href: "/contact", label: "문의" },
+      { href: "/privacy", label: "개인정보처리방침" },
+      { href: "/terms", label: "이용약관" }
+    ]
   }
 ] as const;
 
@@ -27,7 +36,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-line bg-white">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.3fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <section>
           <Link href="/" className="text-base font-semibold text-ink">
             {siteName}
