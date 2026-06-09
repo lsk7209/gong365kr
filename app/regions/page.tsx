@@ -39,7 +39,7 @@ export default async function RegionsPage() {
           지역의 지원사업을 빠르게 탐색하세요.
         </p>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {regionRows.map((region) => (
             <Link
               key={region.code}
@@ -56,38 +56,99 @@ export default async function RegionsPage() {
             </Link>
           ))}
         </div>
+      </section>
 
-        <section className="mt-12">
+      <section className="bg-slate-50">
+        <div className="mx-auto max-w-5xl px-4 py-10">
           <h2 className="text-xl font-semibold text-ink">
-            지역별 공고, 왜 구분해야 하나요?
+            지역별 창업지원, 왜 구분해서 봐야 하나요?
           </h2>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
-            창업지원사업은 중앙부처(중소벤처기업부·고용노동부 등)와
-            지방자치단체가 각각 운영합니다. 지자체 공고는 사업자 주소지나 사업장
-            소재지가 해당 지역이어야 신청 가능한 경우가 많아, 내 지역에 맞는
-            공고를 먼저 확인하는 것이 효율적입니다.
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            창업지원사업은 중앙부처(중소벤처기업부·고용노동부·과학기술정보통신부
+            등)와 지방자치단체가 각각 운영합니다. 지자체 공고는 사업자 주소지나
+            사업장 소재지가 해당 지역이어야 신청 가능한 경우가 많아, 내 지역에
+            맞는 공고를 먼저 확인하는 것이 시간을 아끼는 방법입니다.
           </p>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            예를 들어 서울시는 청년창업사관학교, 서울형 강소기업 지원, 서울
-            혁신형 창업 패키지 등 자체 프로그램을 운영하며, 경기도는 경기도 지역
-            특화 창업 펀드와 스케일업 지원, 부산은 해양·물류 특화 스타트업
-            지원사업을 별도로 운영합니다. gong365.kr은 이러한 공고를 지역 키워드
-            기준으로 자동 분류하여 한 화면에서 비교할 수 있도록 합니다.
+            예를 들어 서울시는 청년창업사관학교, 서울형 강소기업 육성, 서울
+            혁신형 창업 패키지 등 자체 프로그램을 운영합니다. 경기도는 경기
+            스타트업 캠퍼스, 지역 특화 창업 펀드와 스케일업 지원을 별도로
+            운영하며, 부산은 해양·물류·관광 특화 스타트업 지원사업, 인천은
+            항공·바이오 분야 특화 창업 프로그램을 갖추고 있습니다.
           </p>
-        </section>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            gong365.kr은 전국 공고를 지역 키워드 기준으로 자동 분류하여 한
+            화면에서 비교할 수 있도록 합니다. 동일한 사업자도 주요 사업장
+            소재지에 따라 신청 가능한 공고가 다르므로, 이 페이지에서 지역을 먼저
+            선택한 뒤 공고를 탐색하는 것을 추천합니다.
+          </p>
+        </div>
+      </section>
 
-        <section className="mt-8">
+      <section className="mx-auto max-w-5xl px-4 py-10">
+        <h2 className="text-xl font-semibold text-ink">
+          주요 지역별 창업지원 특징
+        </h2>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <RegionFeature
+            name="서울"
+            desc="청년창업·소셜벤처·문화콘텐츠 분야 지원이 풍부합니다. 서울시 지원 사업은 서울 소재 사업자를 우선하며, 글로벌 진출 연계 프로그램도 다수 포함됩니다."
+          />
+          <RegionFeature
+            name="경기"
+            desc="제조·바이오·IT 분야 공고가 많습니다. 판교·수원·성남 등 기술 클러스터 기반 지원사업과 스케일업 단계 창업자를 위한 매칭 펀드가 운영됩니다."
+          />
+          <RegionFeature
+            name="부산"
+            desc="해양·물류·관광·영상콘텐츠 특화 창업지원이 강점입니다. 부산시 창업지원센터와 연계된 공간·멘토링 프로그램이 포함된 공고가 많습니다."
+          />
+          <RegionFeature
+            name="인천"
+            desc="항공·바이오·물류 분야 특화 지원이 있습니다. 인천 경제자유구역 입주를 연계한 글로벌 창업 패키지도 주기적으로 공고됩니다."
+          />
+          <RegionFeature
+            name="대전·세종"
+            desc="연구개발(R&D)·딥테크 창업 지원이 집중됩니다. 대덕연구개발특구 입주 연계 공고와 기술사업화 전용 지원사업이 대표적입니다."
+          />
+          <RegionFeature
+            name="광주·전남"
+            desc="자동차·에너지·AI 특화 지원이 있습니다. 광주 AI 산업융합단지 입주 연계 창업 공고와 전남 지역 농식품 창업 지원사업이 운영됩니다."
+          />
+        </div>
+      </section>
+
+      <section className="bg-slate-50">
+        <div className="mx-auto max-w-5xl px-4 py-10">
           <h2 className="text-xl font-semibold text-ink">
             지역 탐색 이용 방법
           </h2>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
-            <li>위 목록에서 관심 지역을 선택하세요.</li>
-            <li>해당 지역 공고 목록에서 마감일·모집 상태를 확인합니다.</li>
+          <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
+            <li>위 목록에서 사업장 또는 주소지 기준 관심 지역을 선택하세요.</li>
+            <li>
+              해당 지역 공고 목록에서 마감일·모집 상태를 확인합니다. 진행 중인
+              공고가 상단에 표시됩니다.
+            </li>
             <li>공고 제목을 클릭하면 원문 공고 페이지로 이동합니다.</li>
-            <li>마감된 공고도 이전 모집 조건 참고용으로 보관됩니다.</li>
+            <li>
+              마감된 공고도 이전 모집 조건 참고용으로 보관됩니다. 다음 모집
+              시기를 예상하거나 신청 자격 기준을 사전에 확인하는 데 활용하세요.
+            </li>
+            <li>
+              지역 조건 외에도 업종·창업 단계·매출 규모 등 추가 자격 조건은 원문
+              공고에서 반드시 확인하세요.
+            </li>
           </ol>
-        </section>
+        </div>
       </section>
     </main>
+  );
+}
+
+function RegionFeature({ name, desc }: { name: string; desc: string }) {
+  return (
+    <article className="rounded-lg border border-line bg-white p-5">
+      <h3 className="font-semibold text-ink">{name}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    </article>
   );
 }
