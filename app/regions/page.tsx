@@ -38,7 +38,6 @@ export default async function RegionsPage() {
           서울, 경기, 부산 등 전국 17개 광역시도의 공고 수를 비교하고, 관심
           지역의 지원사업을 빠르게 탐색하세요.
         </p>
-
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {regionRows.map((region) => (
             <Link
@@ -73,8 +72,9 @@ export default async function RegionsPage() {
             예를 들어 서울시는 청년창업사관학교, 서울형 강소기업 육성, 서울
             혁신형 창업 패키지 등 자체 프로그램을 운영합니다. 경기도는 경기
             스타트업 캠퍼스, 지역 특화 창업 펀드와 스케일업 지원을 별도로
-            운영하며, 부산은 해양·물류·관광 특화 스타트업 지원사업, 인천은
-            항공·바이오 분야 특화 창업 프로그램을 갖추고 있습니다.
+            운영하며, 부산은 해양·물류·관광·영상콘텐츠 특화 창업지원이
+            강점입니다. 인천은 항공·바이오·물류 분야, 대전·세종은
+            연구개발(R&D)·딥테크 창업 지원이 집중됩니다.
           </p>
           <p className="mt-4 text-sm leading-7 text-slate-600">
             gong365.kr은 전국 공고를 지역 키워드 기준으로 자동 분류하여 한
@@ -140,7 +140,38 @@ export default async function RegionsPage() {
           </ol>
         </div>
       </section>
+
+      <section className="mx-auto max-w-5xl px-4 py-10">
+        <h2 className="text-xl font-semibold text-ink">자주 묻는 질문</h2>
+        <div className="mt-6 space-y-4">
+          <FaqItem
+            q="지역 조건이 없는 공고도 있나요?"
+            a="네. 중앙부처 공고는 전국 어디서든 신청 가능한 경우가 많습니다. 지역 탭에 표시되는 공고는 공고문에 지역 키워드가 포함된 항목만 분류한 것으로, 지역 제한 없는 공고는 전체 공고 목록에서 별도 확인하세요."
+          />
+          <FaqItem
+            q="두 지역에 사업장이 있으면 어디서 신청하나요?"
+            a="주된 사업장 소재지 기준으로 신청하는 것이 원칙입니다. 공고마다 주소지 기준이 다를 수 있으니 원문 공고의 신청 자격 항목을 반드시 확인하세요."
+          />
+          <FaqItem
+            q="공고 수가 0건인 지역은 지원사업이 없나요?"
+            a="해당 지역 키워드가 포함된 공고가 현재 동기화되지 않은 상태입니다. 공고 데이터는 주기적으로 업데이트되며, 지자체 공식 홈페이지나 K-스타트업을 병행해 확인하는 것을 권장합니다."
+          />
+          <FaqItem
+            q="마감된 공고도 볼 수 있나요?"
+            a="gong365.kr은 마감된 공고를 삭제하지 않고 보관합니다. 이전 모집 조건·지원 금액·자격 기준을 참고해 다음 공고를 준비하는 데 활용할 수 있습니다."
+          />
+        </div>
+      </section>
     </main>
+  );
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  return (
+    <div className="rounded-lg border border-line bg-white p-5">
+      <p className="font-semibold text-ink">{q}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{a}</p>
+    </div>
   );
 }
 
