@@ -5,6 +5,7 @@ export const metadata = {
   title: "자격 적합도 체크 | 창업머니맵",
   description:
     "창업 단계, 지역, 업종을 입력해 지원사업 적합도를 확인하는 기능 예정 페이지입니다.",
+  robots: { index: false, follow: false },
   alternates: {
     canonical: "/check",
   },
