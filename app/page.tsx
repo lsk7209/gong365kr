@@ -26,16 +26,16 @@ import { getSeoulDate } from "@/lib/time/seoul";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "창업머니맵 - 지원사업 공고를 한 번에 확인",
+  title: "창업머니맵(gong365.kr) - 지원사업 공고를 한 번에 확인",
   description:
-    "창업지원사업, 정책자금, 지역별 공고와 마감 임박 정보를 한 화면에서 확인합니다. 신청 체크와 원문 공고 이동까지 빠르게 연결합니다.",
+    "공365(gong365.kr)는 창업지원사업, 정책자금, 지역별 공고와 마감 임박 정보를 한 화면에서 확인합니다. 신청 체크와 원문 공고 이동까지 빠르게 연결합니다.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "창업머니맵 - 지원사업 공고를 한 번에 확인",
+    title: "창업머니맵(gong365.kr) - 지원사업 공고를 한 번에 확인",
     description:
-      "창업지원사업, 정책자금, 지역별 공고와 마감 임박 정보를 한 화면에서 확인합니다.",
+      "공365(gong365.kr)는 창업지원사업, 정책자금, 지역별 공고와 마감 임박 정보를 한 화면에서 확인합니다.",
     type: "website",
     locale: "ko_KR",
   },
