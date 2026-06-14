@@ -4,13 +4,13 @@ import { EmptyState } from "@/app/_components/empty-state";
 import { ProgramCard } from "@/app/_components/program-card";
 import { readProgramData } from "@/lib/programs/page-data";
 import {
-  countActiveProgramsByCategory,
-  countProgramsByRegions,
+  getCachedCategoryCounts,
+  getCachedRegionCounts,
   listClosedPrograms,
   listActivePrograms,
-  type ProgramFilterInput
+  type ProgramFilterInput,
 } from "@/lib/programs/query-repository";
-import { findRegionByCode, regionRows } from "@/lib/regions";
+import { findRegionByCode } from "@/lib/regions";
 
 export const revalidate = 21600;
 const PROGRAMS_PAGE_LIMIT = 50;
@@ -30,28 +30,39 @@ type ProgramFilters = ProgramFilterInput;
 
 export const metadata = {
   title: "창업 공고",
-  description: "진행 중인 공고를 우선 보여주고, 마감된 공고도 삭제 없이 기록으로 남겨 과거 공고도 확인할 수 있습니다.",
+  description:
+    "진행 중인 공고를 우선 보여주고, 마감된 공고도 삭제 없이 기록으로 남겨 과거 공고도 확인할 수 있습니다.",
   alternates: {
-    canonical: "/programs"
+    canonical: "/programs",
   },
   openGraph: {
     title: "창업 공고",
-    description: "창업 지원금, 보조금, 정책 공고를 신청 시기별로 확인하고, 마감 공고도 기록으로 조회할 수 있습니다.",
+    description:
+      "창업 지원금, 보조금, 정책 공고를 신청 시기별로 확인하고, 마감 공고도 기록으로 조회할 수 있습니다.",
     locale: "ko_KR",
-    type: "website"
-  }
+    type: "website",
+  },
 };
 
-export default async function ProgramsPage({ searchParams }: ProgramsPageProps) {
+export default async function ProgramsPage({
+  searchParams,
+}: ProgramsPageProps) {
   const filters = await parseProgramFilters(searchParams);
-  const [programs, closedPrograms, categoryFacets, regionFacets] = await Promise.all([
-    readProgramData([], (db) => listActivePrograms(db, PROGRAMS_PAGE_LIMIT, filters)),
-    readProgramData([], (db) => listClosedPrograms(db, PROGRAMS_CLOSED_PAGE_LIMIT, filters)),
-    readProgramData([], (db) => countActiveProgramsByCategory(db, CATEGORY_FACET_LIMIT)),
-    readProgramData([], (db) => countProgramsByRegions(db, regionRows))
-  ]);
+  const [programs, closedPrograms, categoryFacets, regionFacets] =
+    await Promise.all([
+      readProgramData([], (db) =>
+        listActivePrograms(db, PROGRAMS_PAGE_LIMIT, filters),
+      ),
+      readProgramData([], (db) =>
+        listClosedPrograms(db, PROGRAMS_CLOSED_PAGE_LIMIT, filters),
+      ),
+      getCachedCategoryCounts(CATEGORY_FACET_LIMIT),
+      getCachedRegionCounts(),
+    ]);
   const activePrograms = programs;
-  const hasActiveFilters = Boolean(filters.keyword || filters.categoryCode || filters.region);
+  const hasActiveFilters = Boolean(
+    filters.keyword || filters.categoryCode || filters.region,
+  );
   const selectedRegionCode = filters.region?.code;
 
   return (
@@ -61,21 +72,35 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
           <WalletCards className="text-signal" size={32} aria-hidden />
           <h1 className="mt-4 text-3xl font-bold text-ink">창업 공고</h1>
           <p className="mt-3 leading-7 text-slate-600">
-            진행 중인 창업지원사업을 우선 보여주고, 마감된 공고도 기록으로 남겨 과거 공고 내역까지 확인할 수 있습니다.
+            진행 중인 창업지원사업을 우선 보여주고, 마감된 공고도 기록으로 남겨
+            과거 공고 내역까지 확인할 수 있습니다.
           </p>
         </header>
 
-        <section className="mt-6 border-y border-line py-5" aria-label="공고 검색 필터">
+        <section
+          className="mt-6 border-y border-line py-5"
+          aria-label="공고 검색 필터"
+        >
           <SearchForm filters={filters} />
           <div className="mt-5">
             <div className="mb-2 text-sm font-bold text-ink">카테고리</div>
             <div className="flex flex-wrap gap-2">
-              <FilterLink label="전체" href={createProgramHref({ ...filters, categoryCode: undefined })} active={!filters.categoryCode} />
+              <FilterLink
+                label="전체"
+                href={createProgramHref({
+                  ...filters,
+                  categoryCode: undefined,
+                })}
+                active={!filters.categoryCode}
+              />
               {categoryFacets.map((facet) => (
                 <FilterLink
                   key={facet.label}
                   label={`${facet.label} ${facet.count}`}
-                  href={createProgramHref({ ...filters, categoryCode: facet.label })}
+                  href={createProgramHref({
+                    ...filters,
+                    categoryCode: facet.label,
+                  })}
                   active={filters.categoryCode === facet.label}
                 />
               ))}
@@ -84,9 +109,15 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
           <div className="mt-5">
             <div className="mb-2 text-sm font-bold text-ink">지역</div>
             <div className="flex flex-wrap gap-2">
-              <FilterLink label="전체" href={createProgramHref({ ...filters, region: undefined })} active={!filters.region} />
+              <FilterLink
+                label="전체"
+                href={createProgramHref({ ...filters, region: undefined })}
+                active={!filters.region}
+              />
               {regionRows.map((region) => {
-                const count = regionFacets.find((facet) => facet.code === region.code)?.count ?? 0;
+                const count =
+                  regionFacets.find((facet) => facet.code === region.code)
+                    ?.count ?? 0;
 
                 return (
                   <FilterLink
@@ -114,9 +145,14 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
             <h2 className="text-lg font-semibold text-ink">진행 중</h2>
             <div className="mt-3 grid gap-4 md:grid-cols-2">
               {activePrograms.length > 0 ? (
-                activePrograms.map((program) => <ProgramCard key={program.id} program={program} />)
+                activePrograms.map((program) => (
+                  <ProgramCard key={program.id} program={program} />
+                ))
               ) : (
-                <EmptyState title="진행 중 공고 없음" description="현재 조건에 맞는 진행 중인 공고가 없습니다." />
+                <EmptyState
+                  title="진행 중 공고 없음"
+                  description="현재 조건에 맞는 진행 중인 공고가 없습니다."
+                />
               )}
             </div>
           </section>
@@ -125,7 +161,9 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
             <section className="mt-10" aria-label="마감 공고">
               <h2 className="text-lg font-semibold text-ink">마감 기록</h2>
               <div className="mt-3 grid gap-4 md:grid-cols-2">
-                {closedPrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+                {closedPrograms.map((program) => (
+                  <ProgramCard key={program.id} program={program} />
+                ))}
               </div>
             </section>
           ) : null}
@@ -135,13 +173,15 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
   );
 }
 
-async function parseProgramFilters(searchParams: ProgramsPageProps["searchParams"]): Promise<ProgramFilters> {
+async function parseProgramFilters(
+  searchParams: ProgramsPageProps["searchParams"],
+): Promise<ProgramFilters> {
   const params = await searchParams;
 
   return {
     keyword: normalizeKeyword(params.q),
     categoryCode: normalizeFilterValue(params.category),
-    region: normalizeRegion(params.region)
+    region: normalizeRegion(params.region),
   };
 }
 
@@ -154,7 +194,10 @@ function normalizeFilterValue(value: string | string[] | undefined) {
 
 function normalizeKeyword(value: string | string[] | undefined) {
   const raw = Array.isArray(value) ? value[0] : value;
-  const normalized = raw?.replace(/\s+/g, " ").trim().slice(0, MAX_KEYWORD_LENGTH);
+  const normalized = raw
+    ?.replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_KEYWORD_LENGTH);
 
   return normalized || undefined;
 }
@@ -162,14 +205,18 @@ function normalizeKeyword(value: string | string[] | undefined) {
 function normalizeRegion(value: string | string[] | undefined) {
   const code = normalizeFilterValue(value);
 
-  return code ? findRegionByCode(code) ?? undefined : undefined;
+  return code ? (findRegionByCode(code) ?? undefined) : undefined;
 }
 
 function SearchForm({ filters }: { filters: ProgramFilters }) {
   return (
     <form action="/programs" className="flex flex-col gap-2 sm:flex-row">
-      {filters.categoryCode ? <input type="hidden" name="category" value={filters.categoryCode} /> : null}
-      {filters.region ? <input type="hidden" name="region" value={filters.region.code} /> : null}
+      {filters.categoryCode ? (
+        <input type="hidden" name="category" value={filters.categoryCode} />
+      ) : null}
+      {filters.region ? (
+        <input type="hidden" name="region" value={filters.region.code} />
+      ) : null}
       <label className="sr-only" htmlFor="program-search">
         공고 검색
       </label>
@@ -192,7 +239,15 @@ function SearchForm({ filters }: { filters: ProgramFilters }) {
   );
 }
 
-function FilterLink({ label, href, active }: { label: string; href: string; active: boolean }) {
+function FilterLink({
+  label,
+  href,
+  active,
+}: {
+  label: string;
+  href: string;
+  active: boolean;
+}) {
   return (
     <Link
       href={href}
