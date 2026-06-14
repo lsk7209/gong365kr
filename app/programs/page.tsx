@@ -10,7 +10,7 @@ import {
   listActivePrograms,
   type ProgramFilterInput,
 } from "@/lib/programs/query-repository";
-import { findRegionByCode } from "@/lib/regions";
+import { findRegionByCode, regionRows } from "@/lib/regions";
 
 export const revalidate = 21600;
 const PROGRAMS_PAGE_LIMIT = 50;
