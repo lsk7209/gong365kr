@@ -6,5 +6,9 @@
 import { getDb } from "@/db";
 import { refreshFacetCounts } from "@/lib/programs/repository";
 
-const result = await refreshFacetCounts(getDb());
-process.stdout.write(`facet 갱신 완료: ${JSON.stringify(result)}\n`);
+async function main() {
+  const result = await refreshFacetCounts(getDb());
+  process.stdout.write(`facet 갱신 완료: ${JSON.stringify(result)}\n`);
+}
+
+main();
