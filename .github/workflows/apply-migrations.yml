@@ -23,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Apply migrations
-        run: pnpm drizzle-kit migrate
+      - name: Apply facet_counts table
+        run: node scripts/apply-facet-table.mjs
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
