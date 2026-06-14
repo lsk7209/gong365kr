@@ -16,13 +16,9 @@ import {
   sql,
 } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
-import { getDb } from "@/db";
+import type { getDb } from "@/db";
 import { programs } from "@/db/schema";
-import {
-  findRegionsForProgram,
-  regionRows,
-  type RegionRow,
-} from "@/lib/regions";
+import { findRegionsForProgram, type RegionRow } from "@/lib/regions";
 import { PROGRAM_CATEGORY_LABELS, type ProgramListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
@@ -439,26 +435,23 @@ function programClosedSort() {
 // 봇이 수천 페이지를 cold 크롤해도 facet 계산은 6시간당 1회로 줄어든다.
 const FACET_CACHE_REVALIDATE_SECONDS = 21600; // 6시간 = cron sync 주기
 
+// 긴급 출혈 차단: regionKeywordCondition(LIKE 4컬럼×지역키워드) 기반 count(*)가
+// 봇 크롤로 813,000회 실행되어 rows_read 197M(전체의 41%)을 소비했다.
+// unstable_cache가 기대만큼 안 먹어 facet 계산을 전면 비활성(빈 값 반환, DB 미접근).
+// UI의 지역/카테고리 건수만 빠지며 색인/콘텐츠는 정상. 정규화(programs_regions
+// 조인)·인덱스로 경량화 후 복원 예정.
 export const getCachedRegionCounts = unstable_cache(
   async (): Promise<RegionCount[]> => {
-    try {
-      return await countProgramsByRegions(getDb(), regionRows);
-    } catch {
-      return [];
-    }
+    return [];
   },
-  ["program-region-counts"],
+  ["program-region-counts-disabled"],
   { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
 );
 
 export const getCachedCategoryCounts = unstable_cache(
-  async (limit: number): Promise<ProgramCategoryCount[]> => {
-    try {
-      return await countActiveProgramsByCategory(getDb(), limit);
-    } catch {
-      return [];
-    }
+  async (_limit: number): Promise<ProgramCategoryCount[]> => {
+    return [];
   },
-  ["program-category-counts"],
+  ["program-category-counts-disabled"],
   { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
 );
