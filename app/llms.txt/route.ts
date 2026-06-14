@@ -5,7 +5,7 @@ import { listProgramSlugsForSitemap } from "@/lib/programs/query-repository";
 import { getSiteName } from "@/lib/site";
 import { getSeoulDate } from "@/lib/time/seoul";
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 const SITEMAP_LIMIT = 9999;
 

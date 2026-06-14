@@ -30,7 +30,7 @@ type ProgramDetailPageProps = {
   }>;
 };
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({ params }: ProgramDetailPageProps) {
   const { slug } = await params;

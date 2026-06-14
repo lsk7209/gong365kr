@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { readProgramData } from "@/lib/programs/page-data";
-import { countProgramsByRegions } from "@/lib/programs/query-repository";
+import { getCachedRegionCounts } from "@/lib/programs/query-repository";
 import { regionRows } from "@/lib/regions";
 
 export const metadata = {
@@ -19,12 +18,10 @@ export const metadata = {
   },
 };
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export default async function RegionsPage() {
-  const regionCounts = await readProgramData([], (db) =>
-    countProgramsByRegions(db, regionRows),
-  );
+  const regionCounts = await getCachedRegionCounts();
   const regionCountMap = new Map(
     regionCounts.map((item) => [item.code, item.count]),
   );

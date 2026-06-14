@@ -18,7 +18,7 @@ type RegionPageProps = {
   }>;
 };
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 const REGION_PAGE_LIMIT = 50;
 const REGION_CLOSED_PAGE_LIMIT = 30;
 

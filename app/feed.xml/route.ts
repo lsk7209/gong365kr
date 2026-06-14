@@ -12,9 +12,9 @@ type FeedItem = {
 };
 
 const FEED_LIMIT = 50;
-const FEED_REVALIDATE_SECONDS = 3600;
+const FEED_REVALIDATE_SECONDS = 21600;
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function GET() {
   const siteUrl = getSiteUrl();

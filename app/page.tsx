@@ -14,8 +14,8 @@ import { readEventData } from "@/lib/events/page-data";
 import { listUpcomingEvents } from "@/lib/events/query-repository";
 import { readProgramData } from "@/lib/programs/page-data";
 import {
-  countActiveProgramsByCategory,
-  countProgramsByRegions,
+  getCachedCategoryCounts,
+  getCachedRegionCounts,
   listClosedPrograms,
   listOpenPrograms,
 } from "@/lib/programs/query-repository";
@@ -23,7 +23,7 @@ import { regionRows } from "@/lib/regions";
 import { getSiteName, getSiteUrl } from "@/lib/site";
 import { getSeoulDate } from "@/lib/time/seoul";
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export const metadata: Metadata = {
   title: "창업머니맵(gong365.kr) - 지원사업 공고를 한 번에 확인",
@@ -61,10 +61,8 @@ export default async function HomePage() {
       listClosedPrograms(db, HOME_CLOSED_PROGRAM_LIMIT, {}, new Date()),
     ),
     readEventData([], (db) => listUpcomingEvents(db, HOME_EVENT_LIMIT)),
-    readProgramData([], (db) =>
-      countActiveProgramsByCategory(db, HOME_CATEGORY_LIMIT),
-    ),
-    readProgramData([], (db) => countProgramsByRegions(db, regionRows)),
+    getCachedCategoryCounts(HOME_CATEGORY_LIMIT),
+    getCachedRegionCounts(),
   ]);
 
   const latestDeadlineUrl = createDeadlineHref(

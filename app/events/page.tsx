@@ -11,7 +11,7 @@ import {
   type EventFacet
 } from "@/lib/events/query-repository";
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 const EVENTS_PAGE_LIMIT = 50;
 const EVENTS_CLOSED_PAGE_LIMIT = 30;
 const ALL_FILTER_VALUE = "all";

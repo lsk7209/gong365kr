@@ -24,7 +24,7 @@ type EventDetailPageProps = {
   }>;
 };
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({ params }: EventDetailPageProps) {
   const { slug } = await params;

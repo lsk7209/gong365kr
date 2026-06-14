@@ -15,9 +15,14 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import type { getDb } from "@/db";
+import { unstable_cache } from "next/cache";
+import { getDb } from "@/db";
 import { programs } from "@/db/schema";
-import { findRegionsForProgram, type RegionRow } from "@/lib/regions";
+import {
+  findRegionsForProgram,
+  regionRows,
+  type RegionRow,
+} from "@/lib/regions";
 import { PROGRAM_CATEGORY_LABELS, type ProgramListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
@@ -428,3 +433,32 @@ function programClosedSort() {
     else 0
   end`;
 }
+
+// Turso rows_read 절감: 지역/카테고리 facet 카운트는 LIKE 풀스캔 + 지역 수만큼
+// fan-out 되어 가장 비싼 쿼리다. sync 주기(6시간)와 맞춰 공유 캐싱하면
+// 봇이 수천 페이지를 cold 크롤해도 facet 계산은 6시간당 1회로 줄어든다.
+const FACET_CACHE_REVALIDATE_SECONDS = 21600; // 6시간 = cron sync 주기
+
+export const getCachedRegionCounts = unstable_cache(
+  async (): Promise<RegionCount[]> => {
+    try {
+      return await countProgramsByRegions(getDb(), regionRows);
+    } catch {
+      return [];
+    }
+  },
+  ["program-region-counts"],
+  { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
+);
+
+export const getCachedCategoryCounts = unstable_cache(
+  async (limit: number): Promise<ProgramCategoryCount[]> => {
+    try {
+      return await countActiveProgramsByCategory(getDb(), limit);
+    } catch {
+      return [];
+    }
+  },
+  ["program-category-counts"],
+  { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
+);

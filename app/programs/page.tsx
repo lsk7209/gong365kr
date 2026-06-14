@@ -12,7 +12,7 @@ import {
 } from "@/lib/programs/query-repository";
 import { findRegionByCode, regionRows } from "@/lib/regions";
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 const PROGRAMS_PAGE_LIMIT = 50;
 const PROGRAMS_CLOSED_PAGE_LIMIT = 30;
 const CATEGORY_FACET_LIMIT = 20;

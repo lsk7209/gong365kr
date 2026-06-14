@@ -16,7 +16,7 @@ type DeadlinePageProps = {
   }>;
 };
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 const DEADLINE_PAGE_LIMIT = 50;
 const DEADLINE_CLOSED_PAGE_LIMIT = 30;
 
