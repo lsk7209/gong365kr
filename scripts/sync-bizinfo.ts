@@ -3,7 +3,11 @@ import { fetchBizinfoPrograms } from "@/lib/bizinfo/client";
 import { DEFAULT_BIZINFO_PAGE_UNIT } from "@/lib/bizinfo/constants";
 import { normalizeBizinfoItem } from "@/lib/bizinfo/normalize";
 import { getRequiredEnv } from "@/lib/env";
-import { refreshProgramStatuses, upsertPrograms } from "@/lib/programs/repository";
+import {
+  refreshFacetCounts,
+  refreshProgramStatuses,
+  upsertPrograms,
+} from "@/lib/programs/repository";
 
 const DEFAULT_PAGE_INDEX = 1;
 
@@ -14,7 +18,7 @@ async function main() {
   const fetchResult = await fetchBizinfoPrograms({
     apiKey: getRequiredEnv("BIZINFO_API_KEY"),
     pageIndex,
-    pageUnit
+    pageUnit,
   });
   const normalizedPrograms = fetchResult.items
     .map((item) => normalizeBizinfoItem(item, now))
@@ -22,6 +26,8 @@ async function main() {
   const db = getDb();
   const result = await upsertPrograms(db, normalizedPrograms);
   const refreshed = await refreshProgramStatuses(db, now);
+  // 무거운 facet 집계는 sync 시점(6시간 1회)에만 사전계산해 적재한다.
+  await refreshFacetCounts(db, now);
 
   process.stdout.write(
     `${JSON.stringify({
@@ -33,14 +39,16 @@ async function main() {
       normalized: normalizedPrograms.length,
       insertedOrUpdated: result.insertedOrUpdated,
       refreshed,
-      requestedUrl: fetchResult.requestedUrl
-    })}\n`
+      requestedUrl: fetchResult.requestedUrl,
+    })}\n`,
   );
 }
 
 function readNumberArg(name: string, fallback: number) {
   const prefix = `--${name}=`;
-  const raw = process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+  const raw = process.argv
+    .find((arg) => arg.startsWith(prefix))
+    ?.slice(prefix.length);
 
   if (!raw) {
     return fallback;
@@ -56,6 +64,8 @@ function readNumberArg(name: string, fallback: number) {
 }
 
 main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
+  process.stderr.write(
+    `${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`,
+  );
   process.exitCode = 1;
 });

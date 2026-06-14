@@ -16,9 +16,13 @@ import {
   sql,
 } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
-import type { getDb } from "@/db";
-import { programs } from "@/db/schema";
-import { findRegionsForProgram, type RegionRow } from "@/lib/regions";
+import { getDb } from "@/db";
+import { facetCounts, programs } from "@/db/schema";
+import {
+  findRegionsForProgram,
+  regionRows,
+  type RegionRow,
+} from "@/lib/regions";
 import { PROGRAM_CATEGORY_LABELS, type ProgramListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
@@ -435,23 +439,52 @@ function programClosedSort() {
 // 봇이 수천 페이지를 cold 크롤해도 facet 계산은 6시간당 1회로 줄어든다.
 const FACET_CACHE_REVALIDATE_SECONDS = 21600; // 6시간 = cron sync 주기
 
-// 긴급 출혈 차단: regionKeywordCondition(LIKE 4컬럼×지역키워드) 기반 count(*)가
-// 봇 크롤로 813,000회 실행되어 rows_read 197M(전체의 41%)을 소비했다.
-// unstable_cache가 기대만큼 안 먹어 facet 계산을 전면 비활성(빈 값 반환, DB 미접근).
-// UI의 지역/카테고리 건수만 빠지며 색인/콘텐츠는 정상. 정규화(programs_regions
-// 조인)·인덱스로 경량화 후 복원 예정.
+// 근본 해결: 무거운 LIKE 집계는 sync cron(refreshFacetCounts, 6시간 1회)이
+// facet_counts에 사전 적재한다. 페이지는 이 가벼운 테이블(수십 행)만 읽으므로
+// 봇이 수천 페이지를 크롤해도 facet read가 폭주하지 않는다.
+// unstable_cache 래핑을 유지해 facet_counts read도 6시간 캐싱(이중 안전)한다.
 export const getCachedRegionCounts = unstable_cache(
   async (): Promise<RegionCount[]> => {
-    return [];
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({ facetKey: facetCounts.facetKey, count: facetCounts.count })
+        .from(facetCounts)
+        .where(eq(facetCounts.facetType, "region"));
+      const countByCode = new Map(rows.map((row) => [row.facetKey, row.count]));
+
+      // regionRows 순서를 유지해 기존 UI 정렬을 보존한다.
+      return regionRows.map((region) => ({
+        code: region.code,
+        count: countByCode.get(region.code) ?? 0,
+      }));
+    } catch {
+      return [];
+    }
   },
-  ["program-region-counts-disabled"],
+  ["program-region-counts-facet"],
   { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
 );
 
 export const getCachedCategoryCounts = unstable_cache(
-  async (_limit: number): Promise<ProgramCategoryCount[]> => {
-    return [];
+  async (limit: number): Promise<ProgramCategoryCount[]> => {
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({ label: facetCounts.label, count: facetCounts.count })
+        .from(facetCounts)
+        .where(eq(facetCounts.facetType, "category"))
+        .orderBy(desc(facetCounts.count))
+        .limit(limit);
+
+      return rows.map((row) => ({
+        label: row.label ?? "지원사업",
+        count: row.count,
+      }));
+    } catch {
+      return [];
+    }
   },
-  ["program-category-counts-disabled"],
+  ["program-category-counts-facet"],
   { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
 );

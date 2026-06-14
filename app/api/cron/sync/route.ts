@@ -15,9 +15,13 @@ import {
   getSearchSubmitNextRetryAt,
   getSearchSubmitRetryAfterSeconds,
   summarizeSearchSubmit,
-  submitSearchIndexNow
+  submitSearchIndexNow,
 } from "@/lib/search-submit";
-import { refreshProgramStatuses, upsertPrograms } from "@/lib/programs/repository";
+import {
+  refreshFacetCounts,
+  refreshProgramStatuses,
+  upsertPrograms,
+} from "@/lib/programs/repository";
 
 const REQUIRED_RUNTIME_ENV = ["BIZINFO_API_KEY", "TURSO_DATABASE_URL"];
 const BIZINFO_PROVIDER = "공공데이터포털(Bizinfo)";
@@ -31,28 +35,30 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         error: "missing_runtime_env",
-        required: REQUIRED_RUNTIME_ENV
+        required: REQUIRED_RUNTIME_ENV,
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
-  const parsedQuery = bizinfoSyncQuerySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
+  const parsedQuery = bizinfoSyncQuerySchema.safeParse(
+    Object.fromEntries(new URL(request.url).searchParams),
+  );
 
   if (!parsedQuery.success) {
     return NextResponse.json(
       {
         error: "invalid_query",
-        issues: parsedQuery.error.issues
+        issues: parsedQuery.error.issues,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const now = new Date();
   const fetchResult = await fetchBizinfoPrograms({
     apiKey: getRequiredEnv("BIZINFO_API_KEY"),
-    ...parsedQuery.data
+    ...parsedQuery.data,
   });
   const normalizedPrograms = fetchResult.items
     .map((item) => normalizeBizinfoItem(item, now))
@@ -60,7 +66,12 @@ export async function GET(request: Request) {
   const db = getDb();
   const result = await upsertPrograms(db, normalizedPrograms);
   const refreshed = await refreshProgramStatuses(db);
-  const [searchSubmit, readiness] = await Promise.all([submitSearchIndexNow(), getSearchSubmitReadiness()]);
+  // 무거운 facet 집계는 sync 시점(6시간 1회)에만 사전계산해 적재한다.
+  await refreshFacetCounts(db);
+  const [searchSubmit, readiness] = await Promise.all([
+    submitSearchIndexNow(),
+    getSearchSubmitReadiness(),
+  ]);
   const searchSubmitSummary = summarizeSearchSubmit(searchSubmit);
   const health = evaluateSearchSubmitHealth(readiness, searchSubmitSummary);
   const message = formatSearchSubmitHealthMessage(health);
@@ -68,7 +79,12 @@ export async function GET(request: Request) {
   const httpStatus = getSearchSubmitHttpStatus(health);
   const retryAfterSeconds = getSearchSubmitRetryAfterSeconds(health);
   const nextRetryAt = getSearchSubmitNextRetryAt(health);
-  const responseInit = retryAfterSeconds ? { status: httpStatus, headers: { "Retry-After": String(retryAfterSeconds) } } : { status: httpStatus };
+  const responseInit = retryAfterSeconds
+    ? {
+        status: httpStatus,
+        headers: { "Retry-After": String(retryAfterSeconds) },
+      }
+    : { status: httpStatus };
 
   return NextResponse.json(
     {
@@ -89,21 +105,21 @@ export async function GET(request: Request) {
           pageIndex: parsedQuery.data.pageIndex,
           pageUnit: parsedQuery.data.pageUnit,
           dataType: "json",
-          hashtags: parsedQuery.data.hashtags ?? null
+          hashtags: parsedQuery.data.hashtags ?? null,
         },
         source: "bizinfoPrograms",
         requestedUrl: fetchResult.requestedUrl,
         fetchedCount: fetchResult.items.length,
         normalizedCount: normalizedPrograms.length,
         sampleCount: Math.min(3, normalizedPrograms.length),
-        at: now
+        at: now,
       }),
       requestedUrl: fetchResult.requestedUrl,
       searchSubmitSummary,
       health,
       readiness,
-      searchSubmit
+      searchSubmit,
     },
-    responseInit
+    responseInit,
   );
 }
