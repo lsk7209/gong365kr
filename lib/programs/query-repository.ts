@@ -18,6 +18,7 @@ import {
 import { unstable_cache } from "next/cache";
 import { getDb } from "@/db";
 import { facetCounts, programs } from "@/db/schema";
+import { cacheDbRead, dateBucket } from "@/lib/db-read-cache";
 import {
   findRegionsForProgram,
   regionRows,
@@ -57,6 +58,18 @@ export async function listOpenPrograms(
   filters: ProgramFilterInput = {},
   now = new Date(),
 ): Promise<ProgramListItem[]> {
+  return cacheDbRead(
+    programCacheKey("open", limit, filters, now),
+    () => listOpenProgramsRaw(db, limit, filters, now),
+  );
+}
+
+async function listOpenProgramsRaw(
+  db: DbClient,
+  limit: number,
+  filters: ProgramFilterInput = {},
+  now = new Date(),
+): Promise<ProgramListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
@@ -78,6 +91,18 @@ export async function listOpenPrograms(
 }
 
 export async function listClosedPrograms(
+  db: DbClient,
+  limit: number,
+  filters: ProgramFilterInput = {},
+  now = new Date(),
+): Promise<ProgramListItem[]> {
+  return cacheDbRead(
+    programCacheKey("closed", limit, filters, now),
+    () => listClosedProgramsRaw(db, limit, filters, now),
+  );
+}
+
+async function listClosedProgramsRaw(
   db: DbClient,
   limit: number,
   filters: ProgramFilterInput = {},
@@ -106,6 +131,19 @@ export async function listOpenProgramsByDeadlineMonth(
   limit: number,
   now = new Date(),
 ): Promise<ProgramListItem[]> {
+  return cacheDbRead(
+    ["programs", "deadline-open", String(year), String(month), String(limit), dateBucket(now)],
+    () => listOpenProgramsByDeadlineMonthRaw(db, year, month, limit, now),
+  );
+}
+
+async function listOpenProgramsByDeadlineMonthRaw(
+  db: DbClient,
+  year: number,
+  month: number,
+  limit: number,
+  now = new Date(),
+): Promise<ProgramListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
   const start = new Date(Date.UTC(year, month - 1, 1));
   const end = new Date(Date.UTC(year, month, 1));
@@ -126,6 +164,19 @@ export async function listOpenProgramsByDeadlineMonth(
 }
 
 export async function listClosedProgramsByDeadlineMonth(
+  db: DbClient,
+  year: number,
+  month: number,
+  limit: number,
+  now = new Date(),
+): Promise<ProgramListItem[]> {
+  return cacheDbRead(
+    ["programs", "deadline-closed", String(year), String(month), String(limit), dateBucket(now)],
+    () => listClosedProgramsByDeadlineMonthRaw(db, year, month, limit, now),
+  );
+}
+
+async function listClosedProgramsByDeadlineMonthRaw(
   db: DbClient,
   year: number,
   month: number,
@@ -174,6 +225,17 @@ export async function listRecentProgramsForFeed(
   limit: number,
   now = new Date(),
 ): Promise<ProgramListItem[]> {
+  return cacheDbRead(
+    ["programs", "feed", String(limit), dateBucket(now)],
+    () => listRecentProgramsForFeedRaw(db, limit, now),
+  );
+}
+
+async function listRecentProgramsForFeedRaw(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+): Promise<ProgramListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
@@ -187,6 +249,15 @@ export async function listRecentProgramsForFeed(
 }
 
 export async function getProgramBySlug(
+  db: DbClient,
+  slug: string,
+): Promise<ProgramListItem | null> {
+  return cacheDbRead(["programs", "detail", slug], () =>
+    getProgramBySlugRaw(db, slug),
+  );
+}
+
+async function getProgramBySlugRaw(
   db: DbClient,
   slug: string,
 ): Promise<ProgramListItem | null> {
@@ -248,6 +319,18 @@ export async function listActiveRelatedPrograms(
   limit: number,
   now = new Date(),
 ): Promise<ProgramListItem[]> {
+  return cacheDbRead(
+    ["programs", "related-active", String(program.id), String(limit), dateBucket(now)],
+    () => listActiveRelatedProgramsRaw(db, program, limit, now),
+  );
+}
+
+async function listActiveRelatedProgramsRaw(
+  db: DbClient,
+  program: ProgramListItem,
+  limit: number,
+  now = new Date(),
+): Promise<ProgramListItem[]> {
   const relatedConditions = [
     program.categoryCode
       ? eq(programs.categoryCode, program.categoryCode)
@@ -284,6 +367,12 @@ export async function listActiveRelatedPrograms(
 }
 
 export async function listProgramSlugsForSitemap(db: DbClient, limit: number) {
+  return cacheDbRead(["programs", "sitemap", String(limit)], () =>
+    listProgramSlugsForSitemapRaw(db, limit),
+  );
+}
+
+async function listProgramSlugsForSitemapRaw(db: DbClient, limit: number) {
   return db
     .select({
       slug: programs.slug,
@@ -296,6 +385,28 @@ export async function listProgramSlugsForSitemap(db: DbClient, limit: number) {
 }
 
 export async function countActiveProgramsByCategory(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+): Promise<ProgramCategoryCount[]> {
+  const cached = await getCachedCategoryCounts(limit);
+  return cached.length > 0
+    ? cached
+    : countActiveProgramsByCategoryRaw(db, limit, now);
+}
+
+async function countActiveProgramsByCategoryRaw(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+): Promise<ProgramCategoryCount[]> {
+  return cacheDbRead(
+    ["programs", "category-counts", String(limit), dateBucket(now)],
+    () => countActiveProgramsByCategoryUncached(db, limit, now),
+  );
+}
+
+async function countActiveProgramsByCategoryUncached(
   db: DbClient,
   limit: number,
   now = new Date(),
@@ -326,6 +437,28 @@ export async function countActiveProgramsByCategory(
 }
 
 export async function countProgramsByRegions(
+  db: DbClient,
+  regions: readonly RegionRow[],
+  now = new Date(),
+): Promise<RegionCount[]> {
+  const cached = await getCachedRegionCounts();
+  return cached.length > 0
+    ? cached
+    : countProgramsByRegionsRaw(db, regions, now);
+}
+
+async function countProgramsByRegionsRaw(
+  db: DbClient,
+  regions: readonly RegionRow[],
+  now = new Date(),
+): Promise<RegionCount[]> {
+  return cacheDbRead(
+    ["programs", "region-counts", regions.map((region) => region.code).join(","), dateBucket(now)],
+    () => countProgramsByRegionsUncached(db, regions, now),
+  );
+}
+
+async function countProgramsByRegionsUncached(
   db: DbClient,
   regions: readonly RegionRow[],
   now = new Date(),
@@ -406,6 +539,23 @@ function programFilterCondition(filters: ProgramFilterInput) {
   ].filter(Boolean);
 
   return conditions.length > 0 ? and(...conditions) : undefined;
+}
+
+function programCacheKey(
+  scope: string,
+  limit: number,
+  filters: ProgramFilterInput,
+  now: Date,
+) {
+  return [
+    "programs",
+    scope,
+    String(limit),
+    filters.keyword ?? "",
+    filters.categoryCode ?? "",
+    filters.region?.code ?? "",
+    dateBucket(now),
+  ];
 }
 
 function programKeywordCondition(keyword: string) {

@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { events } from "@/db/schema";
+import { cacheDbRead, dateBucket } from "@/lib/db-read-cache";
 import type { EventListItem } from "./display";
 
 type DbClient = ReturnType<typeof getDb>;
@@ -37,6 +38,18 @@ export async function listUpcomingEvents(
 }
 
 export async function listOpenEvents(
+  db: DbClient,
+  limit: number,
+  filters: EventFilterInput = {},
+  now = new Date(),
+): Promise<EventListItem[]> {
+  return cacheDbRead(
+    eventCacheKey("open", limit, filters, now),
+    () => listOpenEventsRaw(db, limit, filters, now),
+  );
+}
+
+async function listOpenEventsRaw(
   db: DbClient,
   limit: number,
   filters: EventFilterInput = {},
@@ -68,6 +81,18 @@ export async function listClosedEvents(
   now = new Date(),
   filters: EventFilterInput = {},
 ): Promise<EventListItem[]> {
+  return cacheDbRead(
+    eventCacheKey("closed", limit, filters, now),
+    () => listClosedEventsRaw(db, limit, now, filters),
+  );
+}
+
+async function listClosedEventsRaw(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+  filters: EventFilterInput = {},
+): Promise<EventListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
@@ -90,6 +115,17 @@ export async function listRecentEvents(
   limit: number,
   now = new Date(),
 ): Promise<EventListItem[]> {
+  return cacheDbRead(
+    ["events", "recent", String(limit), dateBucket(now)],
+    () => listRecentEventsRaw(db, limit, now),
+  );
+}
+
+async function listRecentEventsRaw(
+  db: DbClient,
+  limit: number,
+  now = new Date(),
+): Promise<EventListItem[]> {
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   return db
@@ -104,6 +140,15 @@ export async function getEventBySlug(
   db: DbClient,
   slug: string,
 ): Promise<EventListItem | null> {
+  return cacheDbRead(["events", "detail", slug], () =>
+    getEventBySlugRaw(db, slug),
+  );
+}
+
+async function getEventBySlugRaw(
+  db: DbClient,
+  slug: string,
+): Promise<EventListItem | null> {
   const [event] = await db
     .select(eventListFields)
     .from(events)
@@ -114,6 +159,15 @@ export async function getEventBySlug(
 }
 
 export async function listEventAreas(
+  db: DbClient,
+  limit = 20,
+): Promise<EventFacet[]> {
+  return cacheDbRead(["events", "areas", String(limit)], () =>
+    listEventAreasRaw(db, limit),
+  );
+}
+
+async function listEventAreasRaw(
   db: DbClient,
   limit = 20,
 ): Promise<EventFacet[]> {
@@ -143,6 +197,15 @@ export async function listEventTypes(
   db: DbClient,
   limit = 20,
 ): Promise<EventFacet[]> {
+  return cacheDbRead(["events", "types", String(limit)], () =>
+    listEventTypesRaw(db, limit),
+  );
+}
+
+async function listEventTypesRaw(
+  db: DbClient,
+  limit = 20,
+): Promise<EventFacet[]> {
   const typeCount = count();
   const rows = await db
     .select({
@@ -166,6 +229,12 @@ export async function listEventTypes(
 }
 
 export async function listEventSlugsForSitemap(db: DbClient, limit: number) {
+  return cacheDbRead(["events", "sitemap", String(limit)], () =>
+    listEventSlugsForSitemapRaw(db, limit),
+  );
+}
+
+async function listEventSlugsForSitemapRaw(db: DbClient, limit: number) {
   return db
     .select({
       slug: events.slug,
@@ -225,4 +294,21 @@ function eventKeywordCondition(keyword: string) {
 
 function isEventClosedCondition(nowSeconds: number) {
   return sql`(${events.status} = 'closed' OR (${events.eventEnd} IS NOT NULL AND ${events.eventEnd} + 86399 < ${nowSeconds}))`;
+}
+
+function eventCacheKey(
+  scope: string,
+  limit: number,
+  filters: EventFilterInput,
+  now: Date,
+) {
+  return [
+    "events",
+    scope,
+    String(limit),
+    filters.areaName ?? "",
+    filters.eventType ?? "",
+    filters.keyword ?? "",
+    dateBucket(now),
+  ];
 }
