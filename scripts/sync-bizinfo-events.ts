@@ -54,6 +54,22 @@ function readNumberArg(name: string, fallback: number) {
 }
 
 main().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (message.includes("Bizinfo API request failed after retries")) {
+    process.stdout.write(
+      `${JSON.stringify({
+        ok: false,
+        skipped: true,
+        source: "bizinfo-events",
+        reason: "transient_bizinfo_fetch_failed",
+        message
+      })}\n`
+    );
+    process.exitCode = 0;
+    return;
+  }
+
   process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
   process.exitCode = 1;
 });
