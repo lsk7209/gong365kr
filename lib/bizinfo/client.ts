@@ -28,18 +28,26 @@ async function fetchBizinfoItems(endpoint: string, input: FetchBizinfoItemsInput
     url.searchParams.set("hashtags", input.hashtags);
   }
 
-  const response = await retryFetch(url, {
-    headers: {
-      ...BIZINFO_REQUEST_HEADERS,
-      accept: "application/json"
-    },
-    next: {
-      revalidate: 0
-    }
-  });
+  let response: Response;
+
+  try {
+    response = await retryFetch(url, {
+      headers: {
+        ...BIZINFO_REQUEST_HEADERS,
+        accept: "application/json"
+      },
+      next: {
+        revalidate: 0
+      }
+    });
+  } catch (error) {
+    throw new Error(`Bizinfo API request failed after retries: ${redactApiKey(url)}`, {
+      cause: error
+    });
+  }
 
   if (!response.ok) {
-    throw new Error(`Bizinfo API request failed: ${response.status}`);
+    throw new Error(`Bizinfo API request failed: ${response.status} ${redactApiKey(url)}`);
   }
 
   const payload: unknown = await response.json();
