@@ -15,18 +15,46 @@ async function main() {
   const now = new Date();
   const pageIndex = readNumberArg("pageIndex", DEFAULT_PAGE_INDEX);
   const pageUnit = readNumberArg("pageUnit", DEFAULT_BIZINFO_PAGE_UNIT);
-  const fetchResult = await fetchBizinfoPrograms({
-    apiKey: getRequiredEnv("BIZINFO_API_KEY"),
-    pageIndex,
-    pageUnit,
-  });
+  let fetchResult: Awaited<ReturnType<typeof fetchBizinfoPrograms>>;
+
+  try {
+    fetchResult = await fetchBizinfoPrograms({
+      apiKey: getRequiredEnv("BIZINFO_API_KEY"),
+      pageIndex,
+      pageUnit,
+    });
+  } catch (error) {
+    if (!isTransientBizinfoFetchError(error)) {
+      throw error;
+    }
+
+    const db = getDb();
+    const refreshed = await refreshProgramStatuses(db, now);
+    const facets = await refreshFacetCounts(db, now);
+
+    process.stdout.write(
+      `${JSON.stringify({
+        ok: false,
+        skipped: true,
+        source: "bizinfo",
+        reason: "transient_bizinfo_fetch_failed",
+        pageIndex,
+        pageUnit,
+        refreshed,
+        facets,
+        message: error instanceof Error ? error.message : String(error),
+      })}\n`,
+    );
+    return;
+  }
+
   const normalizedPrograms = fetchResult.items
     .map((item) => normalizeBizinfoItem(item, now))
     .filter((program) => program !== null);
   const db = getDb();
   const result = await upsertPrograms(db, normalizedPrograms);
   const refreshed = await refreshProgramStatuses(db, now);
-  // 무거운 facet 집계는 sync 시점(6시간 1회)에만 사전계산해 적재한다.
+  // Keep expensive facet aggregation on the sync cadence instead of requests.
   await refreshFacetCounts(db, now);
 
   process.stdout.write(
@@ -57,10 +85,16 @@ function readNumberArg(name: string, fallback: number) {
   const parsed = Number(raw);
 
   if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error(`${name} 인자는 1 이상의 정수여야 합니다.`);
+    throw new Error(`${name} must be an integer greater than 0`);
   }
 
   return parsed;
+}
+
+function isTransientBizinfoFetchError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return message.includes("Bizinfo API request failed after retries");
 }
 
 main().catch((error: unknown) => {
