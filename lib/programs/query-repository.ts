@@ -18,7 +18,11 @@ import {
 import { unstable_cache } from "next/cache";
 import { getDb } from "@/db";
 import { facetCounts, programs } from "@/db/schema";
-import { cacheDbRead, dateBucket } from "@/lib/db-read-cache";
+import {
+  cacheDbRead,
+  dateBucket,
+  isMissingIncrementalCacheError,
+} from "@/lib/db-read-cache";
 import {
   findRegionsForProgram,
   regionRows,
@@ -389,7 +393,7 @@ export async function countActiveProgramsByCategory(
   limit: number,
   now = new Date(),
 ): Promise<ProgramCategoryCount[]> {
-  const cached = await getCachedCategoryCounts(limit);
+  const cached = await readCachedCategoryCounts(limit);
   return cached.length > 0
     ? cached
     : countActiveProgramsByCategoryRaw(db, limit, now);
@@ -441,7 +445,7 @@ export async function countProgramsByRegions(
   regions: readonly RegionRow[],
   now = new Date(),
 ): Promise<RegionCount[]> {
-  const cached = await getCachedRegionCounts();
+  const cached = await readCachedRegionCounts();
   return cached.length > 0
     ? cached
     : countProgramsByRegionsRaw(db, regions, now);
@@ -638,3 +642,27 @@ export const getCachedCategoryCounts = unstable_cache(
   ["program-category-counts-facet"],
   { revalidate: FACET_CACHE_REVALIDATE_SECONDS, tags: ["programs"] },
 );
+
+async function readCachedRegionCounts() {
+  try {
+    return await getCachedRegionCounts();
+  } catch (error) {
+    if (isMissingIncrementalCacheError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
+async function readCachedCategoryCounts(limit: number) {
+  try {
+    return await getCachedCategoryCounts(limit);
+  } catch (error) {
+    if (isMissingIncrementalCacheError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+}
