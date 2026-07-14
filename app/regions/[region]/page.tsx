@@ -34,14 +34,14 @@ export async function generateMetadata({ params }: RegionPageProps) {
   const regionName = regionRow?.name ?? "지역";
 
   return {
-    title: `${regionName} 창업지원금 공고`,
-    description: `${regionName} 사업자가 확인할 수 있는 창업지원사업과 정책자금 공고를 정리했습니다.`,
+    title: `${regionName} 2026 기업 지원사업 공고 | 창업머니맵`,
+    description: `${regionName} 기업·예비창업자가 확인할 수 있는 2026 지원사업 공고를 모았습니다. 신청 자격, 마감일, 지원 내용은 원문 공고에서 최종 확인하세요.`,
     alternates: {
       canonical: `/regions/${region}`
     },
     openGraph: {
-      title: `${regionName} 창업지원금 공고`,
-      description: `${regionName} 지역 창업지원사업과 정책자금 공고를 마감일 기준으로 확인하세요.`,
+      title: `${regionName} 2026 기업 지원사업 공고 | 창업머니맵`,
+      description: `${regionName} 2026 기업 지원사업 공고를 마감일과 지원 내용 기준으로 확인하세요.`,
       locale: "ko_KR",
       type: "website"
     }
