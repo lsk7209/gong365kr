@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: RegionPageProps) {
   const regionName = regionRow?.name ?? "지역";
 
   return {
-    title: `${regionName} 2026 기업 지원사업 공고 | 창업머니맵`,
+    title: `${regionName} 2026 기업 지원사업 공고`,
     description: `${regionName} 기업·예비창업자가 확인할 수 있는 2026 지원사업 공고를 모았습니다. 신청 자격, 마감일, 지원 내용은 원문 공고에서 최종 확인하세요.`,
     alternates: {
       canonical: `/regions/${region}`
