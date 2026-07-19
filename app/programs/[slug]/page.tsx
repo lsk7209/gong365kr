@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: ProgramDetailPageProps) {
   const description = getProgramSummary(program);
 
   return {
-    title: `${program.title} | ${getSiteName()}`,
+    title: program.title,
     description: description.slice(0, 120),
     alternates: {
       canonical: `/programs/${program.slug}`,
