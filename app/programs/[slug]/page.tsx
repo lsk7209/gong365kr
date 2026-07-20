@@ -156,9 +156,6 @@ export default async function ProgramDetailPage({
             참고하세요. 마감일이 {endAt}으로 설정되어 있으며 마감된 공고는
             기록으로도 열람 가능합니다.
           </p>
-          <p className="mt-3 text-sm leading-7 text-slate-700">
-            {detailSummary}
-          </p>
         </section>
 
         <section className="border-b border-line py-8">
