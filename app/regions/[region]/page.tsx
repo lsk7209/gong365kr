@@ -139,6 +139,47 @@ export default async function RegionPage({ params }: RegionPageProps) {
           </div>
         </section>
 
+        {regionRow.code === "jeonnam" ? (
+          <section className="border-b border-line py-8" aria-labelledby="jeonnam-check-guide">
+            <h2 id="jeonnam-check-guide" className="text-xl font-bold text-ink">
+              전남 지원사업 공고, 신청 전 3가지만 확인하세요
+            </h2>
+            <p className="mt-3 max-w-3xl leading-7 text-slate-600">
+              아래 목록은 전남 관련 공고를 찾는 출발점입니다. 신청 여부는 공고별 원문을 기준으로 판단하세요.
+            </p>
+            <ol className="mt-5 grid gap-4 md:grid-cols-3">
+              <li className="rounded-lg border border-line p-4">
+                <h3 className="font-bold text-ink">1. 현재 모집 중인지</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  접수 기간과 조기 마감 여부를 먼저 확인하고, 마감일은 원문 공고의 기준 시각을 따르세요.
+                </p>
+              </li>
+              <li className="rounded-lg border border-line p-4">
+                <h3 className="font-bold text-ink">2. 소재지·업력·업종 조건</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  전남 소재지, 사업장 이전 계획, 업력과 업종 제한이 내 상황에 맞는지 공고문에서 확인하세요.
+                </p>
+              </li>
+              <li className="rounded-lg border border-line p-4">
+                <h3 className="font-bold text-ink">3. 서류와 문의처</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  필수 제출 서류와 증빙 기준을 확인한 뒤, 해석이 필요한 조건은 공고의 담당 기관에 문의하세요.
+                </p>
+              </li>
+            </ol>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <GuideBlock
+                title="전남에 거주하지만 사업장이 다른 지역이면 신청할 수 있나요?"
+                description="공고마다 기준이 다릅니다. 거주지보다 사업장 소재지, 이전 계획, 업력 또는 대표자 요건을 기준으로 보는 경우도 있으므로 원문 공고의 신청 자격과 담당 기관 안내를 함께 확인하세요."
+              />
+              <GuideBlock
+                title="마감 전에 어떤 서류와 업력 기준을 먼저 확인해야 하나요?"
+                description="먼저 모집 상태와 마감 시각을 확인한 뒤, 사업자등록 여부와 업력 산정 기준, 소재지 조건, 제출 서류를 원문 공고에서 순서대로 점검하세요. 같은 지원사업이라도 세부 공고에 따라 기준이 달라질 수 있습니다."
+              />
+            </div>
+          </section>
+        ) : null}
+
         <section className="py-8">
           <div className="mb-4 flex items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-ink">{regionRow.name} 활성 공고</h2>
