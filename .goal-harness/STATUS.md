@@ -1,10 +1,10 @@
 # STATUS
 
-Current State: IMPLEMENTING
-Current Phase: Phase 1 complete; implementing Jeonnam-only guidance
-Completed: Clean isolated clone created; dashboard/GSC evidence and non-publishing brief recorded; risk notice created.
-In Progress: Add bounded guide and FAQ copy only for `/regions/jeonnam`.
-Remaining: Tests, build, local smoke, preview deployment, review, and acceptance record.
+Current State: DONE
+Current Phase: Production deployment verified
+Completed: Clean isolated clone, GSC-backed content brief, Jeonnam-only guide, local checks, PR review, preview deployment, merge, and public production smoke.
+In Progress: None.
+Remaining: Measure the page/query signal after 14 and 28 days; do not make another content change without fresh evidence.
 Blocked: None.
-Last Verification: Public Jeonnam page is HTTP 200 and the fresh GSC page/query signal is 68 impressions, 0 clicks, average position 7.93.
-Next Action: Patch the route component without changing metadata, data queries, or other region pages.
+Last Verification: Production deployment `dpl_A8vWbbBkMaA3Bn5rkxKHzPEKNHRU` is Ready. `https://gong365.kr/regions/jeonnam?contentRefresh=20260727` returned HTTP 200 with the guide and canonical; Chungbuk returned HTTP 200 without Jeonnam-specific copy.
+Next Action: Re-check the Jeonnam page/query metrics on 2026-08-10, then decide whether a second bounded improvement is warranted.

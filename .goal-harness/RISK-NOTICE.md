@@ -10,4 +10,6 @@ Rollback: Revert the single feature-branch commit or decline to merge the previe
 
 Safer Alternative: Keep only the non-publishing content brief and make no live-page change.
 
-Approval Needed: The user explicitly continued the prepared Gong365 improvement. Production merge remains gated on preview validation and a reversible review path.
+Approval Needed: The user explicitly continued the prepared Gong365 improvement. The feature was merged only after preview readiness and PR checks, then publicly verified in production.
+
+Operational Side Effect: While attempting an authenticated preview read, `vercel curl` auto-linked the isolated clone and created an additional Vercel project named `gong365kr-content-brief-20260727` (`prj_hYvIyMV0Y90dsO5enHkRS1h7Rhqi`). It is unrelated to the merged site deployment. It has been recorded and deliberately not deleted because removal is an external destructive action requiring explicit approval.
