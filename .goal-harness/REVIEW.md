@@ -15,4 +15,5 @@
 ## Regression Review
 
 - Lint, type-check, 37 tests, production build, and local two-route smoke pass.
-- Preview deployment remains required before merge.
+- Vercel preview `dpl_GXtBouZP8uR9VmAXpm4g7ugPiifH` was Ready before merge. Its anonymous response required Vercel Login, so preview body inspection was not used as evidence.
+- After the approved PR merge, public production smoke proved the intended Jeonnam-only rendering and the non-Jeonnam guard.
