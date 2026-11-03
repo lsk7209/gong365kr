@@ -1,3 +1,4 @@
+import AffiliateFleetScript from 'next/script';
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
@@ -121,6 +122,7 @@ export default function RootLayout({
             <GaPageView />
           </Suspense>
         </div>
+      <AffiliateFleetScript id="affiliate-os-fleet" src="https://multi-dashboard-one.vercel.app/fleet-widget.js" strategy="afterInteractive" />
       </body>
     </html>
   );
